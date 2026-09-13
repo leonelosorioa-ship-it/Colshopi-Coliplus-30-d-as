@@ -13,9 +13,13 @@ import {
   TrendingUp,
   Filter,
   X,
-  Sparkles
+  Sparkles,
+  Key,
+  Copy,
+  Check
 } from 'lucide-react';
 import { UserProfile } from '../types';
+import { SECRET_50_VIP_CODES, getClaimedCodes } from '../data/vipCodes';
 
 interface AdminPanelProps {
   isOpen: boolean;
@@ -41,6 +45,39 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const [usersList, setUsersList] = useState<UserProfile[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAngleFilter, setSelectedAngleFilter] = useState('all');
+
+  // Admin Tab view: 'codes' | 'users' | 'metrics'
+  const [adminTab, setAdminTab] = useState<'codes' | 'users' | 'metrics'>('codes');
+
+  // 50 Secret VIP Codes state
+  const [vipCodesInfo, setVipCodesInfo] = useState<{
+    totalCodes: number;
+    totalClaimed: number;
+    totalAvailable: number;
+    codes: Array<{
+      index: number;
+      code: string;
+      isClaimed: boolean;
+      claimedBy: string | null;
+      claimedUserId: string | null;
+      claimedAt: string | null;
+    }>;
+  }>({
+    totalCodes: 50,
+    totalClaimed: 0,
+    totalAvailable: 50,
+    codes: SECRET_50_VIP_CODES.map((c, i) => ({
+      index: i + 1,
+      code: c,
+      isClaimed: false,
+      claimedBy: null,
+      claimedUserId: null,
+      claimedAt: null
+    }))
+  });
+  const [codesFilter, setCodesFilter] = useState<'all' | 'available' | 'claimed'>('all');
+  const [codesSearch, setCodesSearch] = useState('');
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   // Push Broadcast state
   const [pushTitle, setPushTitle] = useState('ColiFem 30D - Mensaje de Bianka 💚');
@@ -80,16 +117,63 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
   const loadAdminData = async () => {
     try {
-      const [mRes, uRes] = await Promise.all([
+      const [mRes, uRes, cRes] = await Promise.all([
         fetch('/api/admin/metrics'),
-        fetch('/api/users')
+        fetch('/api/users'),
+        fetch('/api/admin/vip-codes')
       ]);
       const mData = await mRes.json();
       const uData = await uRes.json();
       setMetrics(mData);
       setUsersList(uData.users || []);
+
+      if (cRes.ok) {
+        const cData = await cRes.json();
+        // Sincronizar también con claimed codes locales por si acaso
+        const localClaimed = getClaimedCodes();
+        const mergedCodes = cData.codes.map((item: any) => {
+          const local = localClaimed[item.code];
+          if (!item.isClaimed && local) {
+            return {
+              ...item,
+              isClaimed: true,
+              claimedBy: local.userName,
+              claimedUserId: local.userId,
+              claimedAt: local.claimedAt
+            };
+          }
+          return item;
+        });
+        const claimedCount = mergedCodes.filter((c: any) => c.isClaimed).length;
+        setVipCodesInfo({
+          totalCodes: 50,
+          totalClaimed: claimedCount,
+          totalAvailable: 50 - claimedCount,
+          codes: mergedCodes
+        });
+      }
     } catch (err) {
       console.warn('Admin fetch error:', err);
+      // Fallback con datos locales
+      const localClaimed = getClaimedCodes();
+      const fallbackList = SECRET_50_VIP_CODES.map((code, index) => {
+        const claim = localClaimed[code];
+        return {
+          index: index + 1,
+          code,
+          isClaimed: !!claim,
+          claimedBy: claim?.userName || null,
+          claimedUserId: claim?.userId || null,
+          claimedAt: claim?.claimedAt || null
+        };
+      });
+      const claimedCount = fallbackList.filter(c => c.isClaimed).length;
+      setVipCodesInfo({
+        totalCodes: 50,
+        totalClaimed: claimedCount,
+        totalAvailable: 50 - claimedCount,
+        codes: fallbackList
+      });
     }
   };
 
@@ -243,8 +327,257 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
             </div>
           ) : (
             /* AUTHENTICATED ADMIN DASHBOARD */
-            <div className="space-y-8">
-              
+            <div className="space-y-6">
+
+              {/* Tab Navigation */}
+              <div className="flex items-center space-x-2 border-b border-[#E2E8F0] pb-3 overflow-x-auto">
+                <button
+                  type="button"
+                  onClick={() => setAdminTab('codes')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shrink-0 ${
+                    adminTab === 'codes'
+                      ? 'bg-[#0F766E] text-white shadow-xs'
+                      : 'bg-[#F1F5F9] text-[#475569] hover:bg-[#E2E8F0]'
+                  }`}
+                >
+                  <Key className="w-3.5 h-3.5" />
+                  <span>50 Códigos VIP Secretos</span>
+                  <span className={`ml-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    adminTab === 'codes' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'
+                  }`}>
+                    {vipCodesInfo.totalAvailable} libres
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAdminTab('users')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shrink-0 ${
+                    adminTab === 'users'
+                      ? 'bg-[#0F766E] text-white shadow-xs'
+                      : 'bg-[#F1F5F9] text-[#475569] hover:bg-[#E2E8F0]'
+                  }`}
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  <span>Lista de Pacientes</span>
+                  <span className={`ml-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    adminTab === 'users' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+                  }`}>
+                    {usersList.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAdminTab('metrics')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shrink-0 ${
+                    adminTab === 'metrics'
+                      ? 'bg-[#0F766E] text-white shadow-xs'
+                      : 'bg-[#F1F5F9] text-[#475569] hover:bg-[#E2E8F0]'
+                  }`}
+                >
+                  <Bell className="w-3.5 h-3.5" />
+                  <span>Métricas & Push</span>
+                </button>
+              </div>
+
+              {/* ================= TAB 1: 50 CÓDIGOS VIP SECRETOS ================= */}
+              {adminTab === 'codes' && (
+                <div className="space-y-4">
+                  {/* Overview Card */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-linear-to-r from-[#0F766E]/10 to-[#10B981]/10 border border-[#0F766E]/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <Key className="w-4 h-4 text-[#0F766E]" />
+                        <h3 className="text-sm font-bold text-[#0F172A]">
+                          Listado de los 50 Códigos VIP Secretos de ColShopi
+                        </h3>
+                      </div>
+                      <p className="text-xs text-[#64748B] mt-1">
+                        Uso único y exclusivo. Cada vez que una compradora escriba a soporte por WhatsApp, Bianka le entrega uno de estos códigos. Una vez activado, el sistema bloquea su reutilización.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const text = SECRET_50_VIP_CODES.map((c, i) => `${i + 1}. ${c}`).join('\n');
+                        navigator.clipboard.writeText(text);
+                        setCopiedCode('ALL');
+                        setTimeout(() => setCopiedCode(null), 2500);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-white border border-[#CBD5E1] hover:bg-[#F8FAFC] text-xs font-bold text-[#0F766E] flex items-center space-x-1.5 shadow-xs transition-colors shrink-0"
+                    >
+                      {copiedCode === 'ALL' ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <span className="text-emerald-700">¡50 Códigos Copiados!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5 text-[#0F766E]" />
+                          <span>Copiar los 50 Códigos</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Summary Badges & Filters */}
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => setCodesFilter('all')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                          codesFilter === 'all'
+                            ? 'bg-[#0F172A] text-white'
+                            : 'bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]'
+                        }`}
+                      >
+                        Todos ({vipCodesInfo.totalCodes})
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setCodesFilter('available')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                          codesFilter === 'available'
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                        }`}
+                      >
+                        Disponibles ({vipCodesInfo.totalAvailable})
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setCodesFilter('claimed')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                          codesFilter === 'claimed'
+                            ? 'bg-slate-700 text-white'
+                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                        }`}
+                      >
+                        Canjeados ({vipCodesInfo.totalClaimed})
+                      </button>
+                    </div>
+
+                    <div className="relative">
+                      <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+                      <input
+                        type="text"
+                        placeholder="Buscar código de 6 dígitos o usuaria..."
+                        value={codesSearch}
+                        onChange={(e) => setCodesSearch(e.target.value)}
+                        className="pl-8 pr-3 py-1.5 text-xs rounded-xl border border-[#CBD5E1] bg-white w-full sm:w-64 focus:ring-2 focus:ring-[#0F766E] focus:outline-hidden"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Codes Grid (50 Codes) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2.5 max-h-[440px] overflow-y-auto p-1">
+                    {vipCodesInfo.codes
+                      .filter((item) => {
+                        if (codesFilter === 'available' && item.isClaimed) return false;
+                        if (codesFilter === 'claimed' && !item.isClaimed) return false;
+                        if (codesSearch.trim()) {
+                          const q = codesSearch.trim().toLowerCase();
+                          const matchCode = item.code.includes(q);
+                          const matchUser = item.claimedBy?.toLowerCase().includes(q);
+                          if (!matchCode && !matchUser) return false;
+                        }
+                        return true;
+                      })
+                      .map((item) => {
+                        const isCopied = copiedCode === item.code;
+                        return (
+                          <div
+                            key={item.code}
+                            className={`p-3 rounded-xl border transition-all ${
+                              item.isClaimed
+                                ? 'bg-[#F8FAFC] border-[#E2E8F0] opacity-80'
+                                : 'bg-white border-[#CBD5E1] hover:border-[#0F766E] hover:shadow-xs'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="text-[10px] font-mono font-bold text-[#94A3B8]">
+                                #{String(item.index).padStart(2, '0')}
+                              </span>
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                                  item.isClaimed
+                                    ? 'bg-slate-200 text-slate-700'
+                                    : 'bg-emerald-100 text-emerald-800'
+                                }`}
+                              >
+                                {item.isClaimed ? 'Canjeado' : 'Disponible'}
+                              </span>
+                            </div>
+
+                            <div className="font-mono text-base font-black text-[#0F172A] tracking-wider text-center py-1">
+                              {item.code}
+                            </div>
+
+                            {item.isClaimed ? (
+                              <div className="text-[10px] text-[#64748B] text-center mt-1 truncate">
+                                Usado por: <span className="font-bold text-[#334155]">{item.claimedBy || 'Compradora'}</span>
+                              </div>
+                            ) : (
+                              <div className="text-[10px] text-emerald-600 font-semibold text-center mt-1">
+                                Listo para enviar
+                              </div>
+                            )}
+
+                            <div className="mt-2 pt-2 border-t border-[#F1F5F9] flex items-center justify-between gap-1">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(item.code);
+                                  setCopiedCode(item.code);
+                                  setTimeout(() => setCopiedCode(null), 2000);
+                                }}
+                                className={`flex-1 py-1 px-2 rounded-lg text-[10px] font-bold flex items-center justify-center space-x-1 transition-colors ${
+                                  isCopied
+                                    ? 'bg-emerald-600 text-white'
+                                    : 'bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#334155]'
+                                }`}
+                                title="Copiar código"
+                              >
+                                {isCopied ? (
+                                  <>
+                                    <Check className="w-3 h-3" />
+                                    <span>¡Copiado!</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3 h-3" />
+                                    <span>Copiar</span>
+                                  </>
+                                )}
+                              </button>
+
+                              <a
+                                href={`https://wa.me/?text=${encodeURIComponent(
+                                  `🌿 ¡Hola! Tu código secreto de acceso único y exclusivo para ColiFem 30D es: *${item.code}*. Ingresa a la app oficial y actívalo ahora mismo para comenzar tus 30 días de transformación digestiva con ColShopi Tienda By Leps Digital. ¡Bienvenida! 💚`
+                                )}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="py-1 px-2 rounded-lg text-[10px] font-bold bg-[#ECFDF5] text-[#065F46] hover:bg-[#D1FAE5] transition-colors flex items-center justify-center"
+                                title="Enviar mensaje con código por WhatsApp"
+                              >
+                                Enviar WA
+                              </a>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
+
+              {/* ================= TAB 2: MÉTRICAS & PUSH ================= */}
+              {adminTab === 'metrics' && (
+                <div className="space-y-6">
               {/* Metrics KPIs */}
               {metrics && (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -339,10 +672,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                   </button>
                 </div>
               </div>
+            </div>
+          )}
 
-              {/* Users Table & Filters */}
-              <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {/* ================= TAB 3: LISTA DE PACIENTES ================= */}
+          {adminTab === 'users' && (
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center space-x-3">
                     <h3 className="text-sm font-bold text-[#0F172A] flex items-center">
                       <Users className="w-4 h-4 mr-1.5 text-[#0F766E]" />
@@ -437,9 +773,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                   </div>
                 </div>
               </div>
+            )}
 
-            </div>
-          )}
+          </div>
+        )}
 
         </div>
 

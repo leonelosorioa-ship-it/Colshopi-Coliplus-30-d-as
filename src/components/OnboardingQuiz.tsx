@@ -15,7 +15,8 @@ import {
 } from 'lucide-react';
 import { DigestiveAngle, UserProfile } from '../types';
 import {
-  isValidVIPCode,
+  validateStrictVIPCode,
+  markCodeAsClaimed,
   getWhatsAppCodeRequestUrl,
   WHATSAPP_DISPLAY_NUMBER
 } from '../data/vipCodes';
@@ -105,8 +106,10 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({
     }
   };
 
-  // Step 1: Validate 6-digit Code & Contact Details
-  const handleValidateStep1 = () => {
+  // Step 1: Validate 6-digit Code & Contact Details with Strict 50 Secret Codes & Single-Use
+  const [isValidatingCode, setIsValidatingCode] = useState(false);
+
+  const handleValidateStep1 = async () => {
     setGeneralError('');
     setCodeError('');
 
@@ -119,7 +122,7 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({
       return;
     }
 
-    const cleanedCode = accessCode.trim().toUpperCase();
+    const cleanedCode = accessCode.trim();
     if (!cleanedCode) {
       setCodeError('Por favor ingresa tu código VIP de 6 dígitos.');
       return;
@@ -130,12 +133,39 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({
       return;
     }
 
-    if (!isValidVIPCode(cleanedCode)) {
-      setCodeError('Código no válido. Verifica los 6 dígitos entregados por ColShopi o solicita tu código a Bianka por WhatsApp.');
-      return;
+    setIsValidatingCode(true);
+
+    try {
+      // 1. Intento de validación con el servidor
+      const response = await fetch('/api/validate-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: cleanedCode })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.valid) {
+        setCodeError(
+          data.error ||
+          'Código no reconocido o no autorizado. El acceso a ColiFem 30D es exclusivo para compradoras de ColShopi. Solicita tu código único de 6 dígitos a Bianka por WhatsApp.'
+        );
+        setIsValidatingCode(false);
+        return;
+      }
+    } catch {
+      // 2. Validación cliente de respaldo estricta (50 códigos secretos y un solo uso)
+      const localValidation = validateStrictVIPCode(cleanedCode);
+      if (!localValidation.isValid) {
+        setCodeError(localValidation.error || 'Código no reconocido o no autorizado.');
+        setIsValidatingCode(false);
+        return;
+      }
     }
 
-    // Advance to Step 2: Digestive Priority
+    setIsValidatingCode(false);
+
+    // Avanzar al Paso 2: Prioridad Digestiva
     setStep(2);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -145,13 +175,18 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({
     setIsGenerating(true);
 
     const generatedId = `VIP-${Math.floor(1000 + Math.random() * 9000)}`;
+    const cleanCode = accessCode.trim();
+
+    // Marcar código como reclamado de uso único y exclusivo
+    markCodeAsClaimed(cleanCode, generatedId, name.trim());
+
     const newProfile: UserProfile = {
       id: generatedId,
       name: name.trim() || 'Clienta ColShopi',
       whatsapp: whatsapp.trim() || '+57 310 400 7428',
       email: email.trim() || 'cliente@colshopi.com',
       ageRange,
-      accessCode: accessCode.trim().toUpperCase() || 'COLI30',
+      accessCode: cleanCode,
       digestiveAngle,
       symptoms: selectedSymptoms,
       currentDay: 1,
@@ -402,27 +437,6 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({
                         <ArrowRight className="w-3 h-3 ml-1" />
                       </a>
                     </div>
-
-                    {/* Fast Test / Demo Codes helper for quick review */}
-                    <div className="mt-3 pt-2.5 border-t border-dashed border-[#E2E8F0] flex items-center justify-between flex-wrap gap-1.5 text-[11px]">
-                      <span className="text-[#94A3B8] font-medium">Códigos de prueba rápida:</span>
-                      <div className="flex items-center space-x-1.5">
-                        {['518472', '829104', '250816'].map((demoCode) => (
-                          <button
-                            key={demoCode}
-                            type="button"
-                            onClick={() => {
-                              setAccessCode(demoCode);
-                              setCodeError('');
-                            }}
-                            className="px-2 py-0.5 rounded-md bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#0F766E] font-mono font-bold text-[11px] transition-colors border border-[#CBD5E1]"
-                            title={`Usar código ${demoCode}`}
-                          >
-                            {demoCode}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
                   </div>
                 </div>
 
@@ -432,10 +446,20 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({
                     id="btn-validate-vip-code"
                     type="button"
                     onClick={handleValidateStep1}
-                    className="w-full py-3.5 px-6 rounded-2xl bg-[#0F766E] hover:bg-[#115E59] active:bg-[#134E4A] text-white font-bold text-sm sm:text-base flex items-center justify-center space-x-2 transition-all shadow-md hover:shadow-lg transform active:scale-98"
+                    disabled={isValidatingCode}
+                    className="w-full py-3.5 px-6 rounded-2xl bg-[#0F766E] hover:bg-[#115E59] active:bg-[#134E4A] disabled:opacity-60 text-white font-bold text-sm sm:text-base flex items-center justify-center space-x-2 transition-all shadow-md hover:shadow-lg transform active:scale-98 cursor-pointer disabled:cursor-not-allowed"
                   >
-                    <span>Validar Código VIP & Iniciar Diagnóstico</span>
-                    <ArrowRight className="w-4 h-4 ml-1" />
+                    {isValidatingCode ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin mr-2" />
+                        <span>Verificando Código en ColShopi...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Validar Código VIP & Iniciar Diagnóstico</span>
+                        <ArrowRight className="w-4 h-4 ml-1" />
+                      </>
+                    )}
                   </button>
                 </div>
               </motion.div>

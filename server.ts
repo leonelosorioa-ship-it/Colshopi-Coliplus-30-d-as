@@ -235,6 +235,67 @@ app.post('/api/push/send', async (req, res) => {
   });
 });
 
+// Lista Oficial y Secreta de los 50 Códigos VIP de ColShopi Tienda By Leps Digital
+const SECRET_50_VIP_CODES = [
+  '518472', '829104', '394812', '741258', '963852',
+  '159753', '482619', '317495', '628401', '905147',
+  '248163', '739284', '185926', '602481', '391745',
+  '842617', '519374', '206841', '748192', '935274',
+  '162849', '471928', '830192', '594712', '362819',
+  '718294', '940182', '285719', '639182', '417294',
+  '852147', '963258', '581934', '724185', '619283',
+  '837491', '492816', '371948', '684215', '928374',
+  '173952', '481936', '739158', '294817', '816294',
+  '539281', '672914', '384719', '917283', '426815'
+];
+
+// Mapa de códigos reclamados (Uso único y exclusivo)
+const claimedVipCodes: Map<string, { userId: string; userName: string; claimedAt: string }> = new Map();
+
+// Endpoint estricto para validar código VIP de 6 dígitos
+app.post('/api/validate-code', (req, res) => {
+  const { code, userId } = req.body;
+  if (!code || typeof code !== 'string') {
+    return res.status(400).json({
+      valid: false,
+      error: 'Por favor ingresa tu código de activación de 6 dígitos.'
+    });
+  }
+
+  const clean = code.trim();
+
+  // Debe ser 6 dígitos numéricos
+  if (!/^\d{6}$/.test(clean)) {
+    return res.status(400).json({
+      valid: false,
+      error: `El código debe tener exactamente 6 dígitos numéricos (ingresaste ${clean.length}/6).`
+    });
+  }
+
+  // Verifica que pertenezca a la lista autorizada de 50 códigos
+  if (!SECRET_50_VIP_CODES.includes(clean)) {
+    return res.status(400).json({
+      valid: false,
+      error: 'Código no reconocido o no autorizado. El acceso a ColiFem 30D es exclusivo para compradoras de ColShopi. Solicita tu código único de 6 dígitos a Bianka por WhatsApp.'
+    });
+  }
+
+  // Verifica que no haya sido utilizado previamente (Uso único)
+  const existingClaim = claimedVipCodes.get(clean);
+  if (existingClaim && (!userId || existingClaim.userId !== userId)) {
+    return res.status(400).json({
+      valid: false,
+      error: `Este código de 6 dígitos (${clean}) ya fue activado previamente por otra compradora. Cada código es de uso único y exclusivo. Por favor solicita tu código personal a Bianka por WhatsApp.`
+    });
+  }
+
+  res.json({
+    valid: true,
+    code: clean,
+    message: 'Código verificado con éxito. ¡Bienvenida a ColiFem 30D!'
+  });
+});
+
 // Admin PIN validation
 app.post('/api/admin/login', (req, res) => {
   const { email, pin } = req.body;
@@ -288,8 +349,45 @@ app.post('/api/users', (req, res) => {
   };
 
   usersDb.set(id, user);
+
+  // Registrar el código como reclamado si pertenece a la lista VIP
+  if (data.accessCode && SECRET_50_VIP_CODES.includes(data.accessCode.trim())) {
+    claimedVipCodes.set(data.accessCode.trim(), {
+      userId: id,
+      userName: user.name,
+      claimedAt: now
+    });
+  }
+
   res.json({ success: true, user });
 });
+
+// Admin VIP codes status
+app.get('/api/admin/vip-codes', (req, res) => {
+  const codesStatus = SECRET_50_VIP_CODES.map((code, index) => {
+    const claim = claimedVipCodes.get(code);
+    return {
+      index: index + 1,
+      code,
+      isClaimed: !!claim,
+      claimedBy: claim?.userName || null,
+      claimedUserId: claim?.userId || null,
+      claimedAt: claim?.claimedAt || null
+    };
+  });
+
+  const totalCodes = SECRET_50_VIP_CODES.length;
+  const totalClaimed = claimedVipCodes.size;
+  const totalAvailable = totalCodes - totalClaimed;
+
+  res.json({
+    totalCodes,
+    totalClaimed,
+    totalAvailable,
+    codes: codesStatus
+  });
+});
+
 
 // Update day progress
 app.post('/api/users/:id/progress', (req, res) => {
