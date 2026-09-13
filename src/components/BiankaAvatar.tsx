@@ -26,11 +26,17 @@ export const BiankaAvatar: React.FC<BiankaAvatarProps> = ({
 }) => {
   const dimension = typeof size === 'number' ? `${size}px` : size;
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [currentSrcIndex, setCurrentSrcIndex] = useState<number>(0);
   const [imageFailed, setImageFailed] = useState<boolean>(false);
+  const [serverAvatarUrl, setServerAvatarUrl] = useState<string | null>(null);
   const [customAvatar, setCustomAvatar] = useState<string | null>(() => {
     try {
-      return localStorage.getItem('bianka_avatar_custom');
+      const stored = localStorage.getItem('bianka_avatar_custom');
+      // If corrupted or test 1x1 dummy image, clean it up
+      if (stored && (stored.length < 200 || stored.includes('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJ'))) {
+        localStorage.removeItem('bianka_avatar_custom');
+        return null;
+      }
+      return stored;
     } catch {
       return null;
     }
@@ -40,10 +46,9 @@ export const BiankaAvatar: React.FC<BiankaAvatarProps> = ({
     const handleAvatarUpdate = () => {
       try {
         const stored = localStorage.getItem('bianka_avatar_custom');
-        if (stored) {
+        if (stored && stored.length > 200) {
           setCustomAvatar(stored);
           setImageFailed(false);
-          setCurrentSrcIndex(0);
         }
       } catch (e) {
         console.error('Error reading custom avatar:', e);
@@ -54,24 +59,34 @@ export const BiankaAvatar: React.FC<BiankaAvatarProps> = ({
     return () => window.removeEventListener('bianka_avatar_updated', handleAvatarUpdate);
   }, []);
 
-  // Priority: 1) explicit src prop -> 2) custom avatar in localStorage -> 3) static file routes
-  const activeSrc = src || customAvatar || STATIC_IMAGE_SOURCES[currentSrcIndex];
+  // Check if server has custom avatar file on disk
+  useEffect(() => {
+    if (!customAvatar && !src) {
+      fetch('/api/avatar', { method: 'HEAD' })
+        .then((res) => {
+          if (res.ok) {
+            setServerAvatarUrl('/api/avatar?t=' + Date.now());
+            setImageFailed(false);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [customAvatar, src]);
+
+  // Priority: 1) explicit src prop -> 2) valid custom avatar in localStorage -> 3) server avatar if present -> null (triggers high-fidelity SVG)
+  const activeSrc = src || customAvatar || serverAvatarUrl;
 
   const handleImageError = () => {
-    if (src) {
-      setImageFailed(true);
-      return;
-    }
     if (customAvatar && activeSrc === customAvatar) {
+      try {
+        localStorage.removeItem('bianka_avatar_custom');
+      } catch {}
       setCustomAvatar(null);
-      setCurrentSrcIndex(0);
-      return;
     }
-    if (currentSrcIndex < STATIC_IMAGE_SOURCES.length - 1) {
-      setCurrentSrcIndex((prev) => prev + 1);
-    } else {
-      setImageFailed(true);
+    if (serverAvatarUrl && activeSrc === serverAvatarUrl) {
+      setServerAvatarUrl(null);
     }
+    setImageFailed(true);
   };
 
   const processFile = (file: File) => {

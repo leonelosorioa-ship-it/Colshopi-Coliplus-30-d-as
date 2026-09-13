@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import webpush from 'web-push';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
@@ -173,7 +174,6 @@ app.post('/api/upload-avatar', (req, res) => {
     }
     const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
     const buffer = Buffer.from(base64Data, 'base64');
-    const fs = require('fs');
     const publicDir = path.join(process.cwd(), 'public');
     if (!fs.existsSync(publicDir)) {
       fs.mkdirSync(publicDir, { recursive: true });
@@ -196,9 +196,23 @@ app.post('/api/upload-avatar', (req, res) => {
   }
 });
 
+// Static route for Bianka avatar images (returns 404 if not present on disk, preventing SPA html fallback)
+app.get(['/Bianka%20en%20Circulo.jpg', '/Bianka en Circulo.jpg', '/bianka.jpg', '/bianka.png'], (req, res) => {
+  const possibleFiles = [
+    path.join(process.cwd(), 'public', 'Bianka en Circulo.jpg'),
+    path.join(process.cwd(), 'public', 'bianka.jpg'),
+    path.join(process.cwd(), 'public', 'bianka.png')
+  ];
+  for (const file of possibleFiles) {
+    if (fs.existsSync(file)) {
+      return res.sendFile(file);
+    }
+  }
+  res.status(404).send('Not found');
+});
+
 // GET Bianka avatar if present on disk
 app.get('/api/avatar', (req, res) => {
-  const fs = require('fs');
   const possibleFiles = [
     path.join(process.cwd(), 'public', 'Bianka en Circulo.jpg'),
     path.join(process.cwd(), 'public', 'bianka.jpg'),
