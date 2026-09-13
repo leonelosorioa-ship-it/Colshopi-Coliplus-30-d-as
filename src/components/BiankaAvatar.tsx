@@ -1,160 +1,49 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Camera } from 'lucide-react';
+import React, { useState } from 'react';
 
 interface BiankaAvatarProps {
   size?: number | string;
   className?: string;
   showBadge?: boolean;
-  isEditable?: boolean;
   src?: string;
 }
 
-const CANDIDATE_IMAGE_URLS = [
+const STATIC_IMAGE_SOURCES = [
   '/Bianka en Circulo.jpg',
   '/bianka.jpg',
-  '/bianka.png',
-  '/assets/bianka.jpg'
+  '/bianka.png'
 ];
 
 export const BiankaAvatar: React.FC<BiankaAvatarProps> = ({
   size = 56,
   className = '',
   showBadge = false,
-  isEditable = true,
   src
 }) => {
   const dimension = typeof size === 'number' ? `${size}px` : size;
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [currentSrcIndex, setCurrentSrcIndex] = useState<number>(0);
+  const [imageFailed, setImageFailed] = useState<boolean>(false);
 
-  const [customPhoto, setCustomPhoto] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem('bianka_custom_photo');
-    } catch {
-      return null;
-    }
-  });
-
-  const [currentUrlIndex, setCurrentUrlIndex] = useState<number>(0);
-  const [allImagesFailed, setAllImagesFailed] = useState<boolean>(false);
-  const [isUploading, setIsUploading] = useState<boolean>(false);
-
-  useEffect(() => {
-    const handlePhotoUpdated = () => {
-      try {
-        const stored = localStorage.getItem('bianka_custom_photo');
-        setCustomPhoto(stored);
-        setAllImagesFailed(false);
-        setCurrentUrlIndex(0);
-      } catch {
-        // ignore
-      }
-    };
-
-    window.addEventListener('bianka_photo_updated', handlePhotoUpdated);
-    window.addEventListener('storage', handlePhotoUpdated);
-    return () => {
-      window.removeEventListener('bianka_photo_updated', handlePhotoUpdated);
-      window.removeEventListener('storage', handlePhotoUpdated);
-    };
-  }, []);
-
-  const activeSrc = src || customPhoto || CANDIDATE_IMAGE_URLS[currentUrlIndex];
+  const activeSrc = src || STATIC_IMAGE_SOURCES[currentSrcIndex];
 
   const handleImageError = () => {
-    if (src || customPhoto) {
-      if (customPhoto) setCustomPhoto(null);
-      setCurrentUrlIndex(0);
+    if (src) {
+      setImageFailed(true);
       return;
     }
-
-    if (currentUrlIndex < CANDIDATE_IMAGE_URLS.length - 1) {
-      setCurrentUrlIndex((prev) => prev + 1);
+    if (currentSrcIndex < STATIC_IMAGE_SOURCES.length - 1) {
+      setCurrentSrcIndex((prev) => prev + 1);
     } else {
-      setAllImagesFailed(true);
-    }
-  };
-
-  const processAndSaveFile = (file: File) => {
-    if (!file || !file.type.startsWith('image/')) return;
-    setIsUploading(true);
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const dataUrl = e.target?.result as string;
-      if (dataUrl) {
-        try {
-          localStorage.setItem('bianka_custom_photo', dataUrl);
-          setCustomPhoto(dataUrl);
-          setAllImagesFailed(false);
-          window.dispatchEvent(new Event('bianka_photo_updated'));
-
-          // Persist to server disk as well
-          await fetch('/api/upload-avatar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ imageBase64: dataUrl })
-          }).catch((err) => console.warn('Avatar server sync notice:', err));
-        } catch (err) {
-          console.error('Error saving custom photo:', err);
-        } finally {
-          setIsUploading(false);
-        }
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      processAndSaveFile(file);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const file = e.dataTransfer.files?.[0];
-    if (file) {
-      processAndSaveFile(file);
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const triggerFilePicker = (e: React.MouseEvent) => {
-    if (isEditable) {
-      e.stopPropagation();
-      fileInputRef.current?.click();
+      setImageFailed(true);
     }
   };
 
   return (
     <div
-      className={`group relative inline-flex items-center justify-center shrink-0 rounded-full overflow-hidden border-2 border-[#38BDF8] shadow-md bg-[#1E293B] select-none ${
-        isEditable ? 'cursor-pointer hover:ring-2 hover:ring-[#38BDF8]/60 transition-all' : ''
-      } ${className}`}
+      className={`relative inline-flex items-center justify-center shrink-0 rounded-full overflow-hidden border-2 border-[#38BDF8] shadow-md bg-[#131F2B] select-none ${className}`}
       style={{ width: dimension, height: dimension }}
-      onClick={triggerFilePicker}
-      onDrop={handleDrop}
-      onDragOver={handleDragOver}
-      title={isEditable ? 'Haz clic para cambiar la foto de Bianka (Sube Bianka en Circulo.jpg)' : 'Bianka - Guía de Bienestar ColShopi'}
+      title="Bianka - Guía de Bienestar ColShopi Tienda"
     >
-      {/* Hidden file input for one-click upload */}
-      {isEditable && (
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleFileInputChange}
-        />
-      )}
-
-      {!allImagesFailed && activeSrc ? (
+      {!imageFailed && activeSrc ? (
         <img
           src={activeSrc}
           alt="Bianka - Guía de Bienestar ColShopi"
@@ -163,64 +52,80 @@ export const BiankaAvatar: React.FC<BiankaAvatarProps> = ({
           onError={handleImageError}
         />
       ) : (
-        /* High-Fidelity Vector Replica of Bianka en Circulo */
+        /* Permanent, High-Fidelity Vector Replica of Bianka en Circulo */
         <svg
-          viewBox="0 0 200 200"
+          viewBox="0 0 500 500"
           className="w-full h-full object-cover pointer-events-none"
+          xmlns="http://www.w3.org/2000/svg"
         >
           <defs>
-            <clipPath id="circleClip">
-              <circle cx="100" cy="100" r="100" />
+            <clipPath id="circleFrame">
+              <circle cx="250" cy="250" r="248" />
             </clipPath>
 
-            {/* Neon Glow Filter */}
-            <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="2.5" result="blur" />
+            {/* Neon Glow Filters */}
+            <filter id="neonBlur" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="7" result="blur1" />
+              <feGaussianBlur stdDeviation="3" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur1" />
+                <feMergeNode in="blur2" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
 
-            {/* Gradients */}
-            <linearGradient id="wallBg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#1E293B" />
-              <stop offset="60%" stopColor="#172554" />
-              <stop offset="100%" stopColor="#0F172A" />
-            </linearGradient>
-
-            <linearGradient id="woodShelf" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#92400E" />
-              <stop offset="50%" stopColor="#B45309" />
-              <stop offset="100%" stopColor="#78350F" />
+            {/* Color Gradients */}
+            <linearGradient id="wallGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1E2D3D" />
+              <stop offset="50%" stopColor="#172433" />
+              <stop offset="100%" stopColor="#0F1722" />
             </linearGradient>
 
             <linearGradient id="neonCyan" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#38BDF8" />
-              <stop offset="50%" stopColor="#06B6D4" />
-              <stop offset="100%" stopColor="#22D3EE" />
+              <stop offset="50%" stopColor="#00E5FF" />
+              <stop offset="100%" stopColor="#06B6D4" />
             </linearGradient>
 
-            <linearGradient id="biankaHair" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#451A03" />
-              <stop offset="50%" stopColor="#291104" />
-              <stop offset="100%" stopColor="#1C0A00" />
+            <linearGradient id="woodFinish" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#C4915C" />
+              <stop offset="50%" stopColor="#D8A46F" />
+              <stop offset="100%" stopColor="#A87542" />
             </linearGradient>
 
-            <linearGradient id="hairHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#5E2B08" />
-              <stop offset="100%" stopColor="#291104" />
+            <linearGradient id="hairBase" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#3A1F14" />
+              <stop offset="50%" stopColor="#24130C" />
+              <stop offset="100%" stopColor="#150B07" />
             </linearGradient>
 
-            <linearGradient id="biankaSkin" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#FED7AA" />
-              <stop offset="60%" stopColor="#FDBA74" />
-              <stop offset="100%" stopColor="#FB923C" />
+            <linearGradient id="hairHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#5E3524" />
+              <stop offset="100%" stopColor="#2A150D" />
             </linearGradient>
 
-            <linearGradient id="whiteCoat" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id="skinTone" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#FDE4D2" />
+              <stop offset="65%" stopColor="#FDBF9A" />
+              <stop offset="100%" stopColor="#F8A77E" />
+            </linearGradient>
+
+            <radialGradient id="cheekBlush" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#F43F5E" stopOpacity="0.32" />
+              <stop offset="100%" stopColor="#F43F5E" stopOpacity="0" />
+            </radialGradient>
+
+            <linearGradient id="labCoat" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#FFFFFF" />
-              <stop offset="65%" stopColor="#F8FAFC" />
+              <stop offset="70%" stopColor="#F8FAFC" />
               <stop offset="100%" stopColor="#E2E8F0" />
             </linearGradient>
 
@@ -230,271 +135,332 @@ export const BiankaAvatar: React.FC<BiankaAvatarProps> = ({
             </linearGradient>
           </defs>
 
-          <g clipPath="url(#circleClip)">
-            {/* Background Store Wall */}
-            <rect width="200" height="200" fill="url(#wallBg)" />
+          <g clipPath="url(#circleFrame)">
+            {/* 1. ROOM BACKGROUND */}
+            <rect width="500" height="500" fill="url(#wallGradient)" />
 
-            {/* Left Counter & Shelves */}
-            <rect x="0" y="90" width="45" height="6" fill="url(#woodShelf)" />
-            <rect x="0" y="55" width="40" height="5" fill="url(#woodShelf)" />
+            {/* 2. CIRCULAR NEON SIGN ON LEFT ("Colshopi Tienda By Leps Digital") */}
+            <g id="neonSignGroup">
+              {/* Outer Cyan Halo */}
+              <circle
+                cx="135"
+                cy="135"
+                r="110"
+                fill="#0F172A"
+                fillOpacity="0.8"
+                stroke="url(#neonCyan)"
+                strokeWidth="7"
+                filter="url(#neonBlur)"
+              />
+              {/* Crisp Inner Ring */}
+              <circle
+                cx="135"
+                cy="135"
+                r="100"
+                fill="none"
+                stroke="#E0F7FA"
+                strokeWidth="2"
+                opacity="0.85"
+              />
 
-            {/* Small green plant on left shelf */}
-            <ellipse cx="48" cy="108" rx="7" ry="5" fill="#E2E8F0" />
-            <path d="M44 105 C40 98 44 92 48 94 C52 92 56 98 52 105 Z" fill="#10B981" />
-            <path d="M48 105 C46 95 50 88 53 92 C56 95 52 103 48 105 Z" fill="#34D399" />
+              {/* "Colshopi" Cursive Brand */}
+              <text
+                x="135"
+                y="114"
+                fill="#FFFFFF"
+                fontSize="36"
+                fontFamily="'Brush Script MT', 'Dancing Script', 'Pacifico', cursive, sans-serif"
+                fontWeight="bold"
+                textAnchor="middle"
+                filter="url(#softGlow)"
+              >
+                Colshopi
+              </text>
 
-            {/* Left Bottles & Jars on shelves */}
-            <rect x="5" y="44" width="7" height="11" rx="1.5" fill="#F8FAFC" />
-            <rect x="6" y="42" width="5" height="3" fill="#0D9488" />
-            <rect x="15" y="42" width="8" height="13" rx="2" fill="#78350F" />
-            <rect x="16" y="40" width="6" height="3" fill="#F8FAFC" />
-            <rect x="26" y="45" width="7" height="10" rx="1.5" fill="#F8FAFC" />
+              {/* "— Tienda —" Subtitle with Horizontal Dividing Lines */}
+              <line x1="68" y1="134" x2="98" y2="134" stroke="#38BDF8" strokeWidth="2.5" strokeLinecap="round" />
+              <text
+                x="135"
+                y="139"
+                fill="#38BDF8"
+                fontSize="14"
+                fontFamily="system-ui, -apple-system, sans-serif"
+                fontWeight="800"
+                textAnchor="middle"
+                letterSpacing="2.5"
+              >
+                TIENDA
+              </text>
+              <line x1="172" y1="134" x2="202" y2="134" stroke="#38BDF8" strokeWidth="2.5" strokeLinecap="round" />
 
-            {/* Counter glass cabinet line */}
-            <line x1="0" y1="120" x2="60" y2="140" stroke="#38BDF8" strokeWidth="1" opacity="0.3" />
+              {/* "By Leps Digital" Elegant Signature */}
+              <text
+                x="135"
+                y="166"
+                fill="#F0FDFA"
+                fontSize="18"
+                fontFamily="'Brush Script MT', 'Dancing Script', cursive, sans-serif"
+                fontStyle="italic"
+                textAnchor="middle"
+              >
+                By Leps Digital
+              </text>
+            </g>
 
-            {/* Big Circular Neon Sign on Left */}
-            <circle cx="48" cy="56" r="38" fill="#0F172A" opacity="0.85" />
-            <circle
-              cx="48"
-              cy="56"
-              r="38"
-              fill="none"
-              stroke="url(#neonCyan)"
-              strokeWidth="2.8"
-              filter="url(#neonGlow)"
-            />
-            <circle
-              cx="48"
-              cy="56"
-              r="34"
-              fill="none"
-              stroke="#E0F2FE"
-              strokeWidth="1"
-              opacity="0.6"
-            />
+            {/* 3. LEFT BACKGROUND (Shelves, Plants & Counter) */}
+            <g id="leftShelvesAndCounter">
+              {/* Lower Counter Edge */}
+              <rect x="0" y="260" width="120" height="15" fill="url(#woodFinish)" />
+              <line x1="0" y1="275" x2="120" y2="275" stroke="#78350F" strokeWidth="2" />
 
-            {/* Neon Sign Text */}
-            <text
-              x="48"
-              y="45"
-              fill="#E0F2FE"
-              fontSize="12"
-              fontFamily="Georgia, cursive, serif"
-              fontStyle="italic"
-              fontWeight="bold"
-              textAnchor="middle"
-              filter="url(#neonGlow)"
-            >
-              Colshopi
-            </text>
-            <text
-              x="48"
-              y="56"
-              fill="#38BDF8"
-              fontSize="5.5"
-              fontFamily="system-ui, sans-serif"
-              fontWeight="700"
-              textAnchor="middle"
-              letterSpacing="0.8"
-            >
-              — TIENDA —
-            </text>
-            <text
-              x="48"
-              y="67"
-              fill="#F0FDFA"
-              fontSize="6"
-              fontFamily="Georgia, cursive, serif"
-              fontStyle="italic"
-              textAnchor="middle"
-            >
-              By Leps Digital
-            </text>
+              {/* Green Potted Plant on Left Counter */}
+              <ellipse cx="118" cy="260" rx="16" ry="11" fill="#E2E8F0" />
+              <path d="M106 255 C96 238 108 220 118 226 C128 220 140 238 130 255 Z" fill="#10B981" />
+              <path d="M118 255 C112 230 124 212 130 222 C136 230 128 250 118 255 Z" fill="#34D399" />
+              <path d="M110 255 C100 242 108 228 114 236 Z" fill="#059669" />
 
-            {/* Right Multi-tier Shelves with Products */}
-            <rect x="145" y="25" width="55" height="5" fill="url(#woodShelf)" />
-            <rect x="142" y="60" width="58" height="5" fill="url(#woodShelf)" />
-            <rect x="140" y="95" width="60" height="5" fill="url(#woodShelf)" />
-            <rect x="138" y="130" width="62" height="5" fill="url(#woodShelf)" />
+              {/* Upper Left Shelf */}
+              <rect x="0" y="225" width="85" height="10" fill="url(#woodFinish)" />
+              {/* White bottles on upper shelf */}
+              <rect x="10" y="198" width="16" height="27" rx="3" fill="#FFFFFF" />
+              <rect x="12" y="206" width="12" height="14" fill="#0D9488" />
+              <rect x="32" y="195" width="18" height="30" rx="3" fill="#FFFFFF" />
+              <rect x="34" y="204" width="14" height="16" fill="#0284C7" />
+              <rect x="56" y="200" width="15" height="25" rx="3" fill="#FFFFFF" />
+              <rect x="58" y="207" width="11" height="13" fill="#10B981" />
 
-            {/* Top Shelf Products */}
-            <rect x="150" y="15" width="8" height="10" rx="1.5" fill="#F8FAFC" />
-            <rect x="151" y="13" width="6" height="2.5" fill="#0284C7" />
-            <rect x="162" y="14" width="9" height="11" rx="1.5" fill="#F8FAFC" />
-            <rect x="163" y="12" width="7" height="2.5" fill="#10B981" />
-            <ellipse cx="178" cy="20" rx="6" ry="5" fill="#E2E8F0" />
-            <path d="M176 17 C174 12 178 9 181 11 C184 13 182 17 178 19 Z" fill="#10B981" />
+              {/* Black Tub on Counter ("Tyruss") */}
+              <rect x="32" y="305" width="46" height="65" rx="7" fill="#1E293B" stroke="#334155" strokeWidth="2" />
+              <rect x="36" y="325" width="38" height="30" fill="#0F172A" />
+              <text x="55" y="344" fill="#FFFFFF" fontSize="9" fontWeight="900" textAnchor="middle" fontFamily="sans-serif">Tyruss</text>
+            </g>
 
-            {/* Mid Shelf Products */}
-            <rect x="148" y="44" width="10" height="16" rx="1" fill="#D97706" opacity="0.9" />
-            <rect x="160" y="46" width="11" height="14" rx="1" fill="#0284C7" opacity="0.9" />
-            <rect x="173" y="48" width="8" height="12" rx="1.5" fill="#F8FAFC" />
-            <rect x="183" y="47" width="9" height="13" rx="1.5" fill="#047857" />
+            {/* 4. RIGHT BACKGROUND (Multi-Tier Boutique Health Shelves) */}
+            <g id="rightShelves">
+              {/* Black vertical metal supports */}
+              <line x1="365" y1="30" x2="365" y2="480" stroke="#0F172A" strokeWidth="5" />
+              <line x1="485" y1="30" x2="485" y2="480" stroke="#0F172A" strokeWidth="5" />
 
-            {/* Lower Shelf Products */}
-            <rect x="146" y="80" width="11" height="15" rx="1" fill="#0D9488" />
-            <rect x="159" y="81" width="10" height="14" rx="1" fill="#78350F" />
-            <rect x="171" y="83" width="9" height="12" rx="1.5" fill="#F8FAFC" />
+              {/* Shelf 1 (Top) */}
+              <rect x="350" y="130" width="150" height="12" fill="url(#woodFinish)" />
+              <rect x="375" y="96" width="18" height="34" rx="3" fill="#FFFFFF" />
+              <rect x="377" y="106" width="14" height="18" fill="#0284C7" />
+              <rect x="400" y="98" width="20" height="32" rx="3" fill="#FFFFFF" />
+              <rect x="402" y="108" width="16" height="16" fill="#10B981" />
+              {/* Potted plant on top shelf */}
+              <ellipse cx="440" cy="128" rx="15" ry="10" fill="#F8FAFC" />
+              <path d="M432 124 C424 110 435 95 442 102 C450 95 460 110 452 124 Z" fill="#10B981" />
 
-            {/* BIANKA CHARACTER */}
-            {/* Back Hair Layer */}
+              {/* Shelf 2 (Mid-High: Kraft Standing Bags & Boxes) */}
+              <rect x="350" y="210" width="150" height="12" fill="url(#woodFinish)" />
+              {/* Kraft Bags */}
+              <rect x="368" y="165" width="22" height="45" rx="3" fill="#C28E58" stroke="#9A6332" strokeWidth="1" />
+              <rect x="372" y="180" width="14" height="20" fill="#F8FAFC" opacity="0.9" />
+              <rect x="396" y="168" width="24" height="42" rx="3" fill="#D99B5C" stroke="#9A6332" strokeWidth="1" />
+              <rect x="426" y="162" width="22" height="48" rx="2" fill="#0284C7" />
+              <rect x="454" y="160" width="22" height="50" rx="3" fill="#0D9488" />
+
+              {/* Shelf 3 (Dropper Bottles & White Jars) */}
+              <rect x="350" y="295" width="150" height="12" fill="url(#woodFinish)" />
+              <rect x="365" y="258" width="18" height="37" rx="3" fill="#78350F" />
+              <rect x="388" y="260" width="22" height="35" rx="3" fill="#FFFFFF" />
+              <rect x="391" y="270" width="16" height="18" fill="#10B981" />
+              <rect x="415" y="262" width="18" height="33" rx="3" fill="#78350F" />
+              <rect x="438" y="258" width="24" height="37" rx="3" fill="#FFFFFF" />
+
+              {/* Shelf 4 (Bottom) */}
+              <rect x="350" y="380" width="150" height="12" fill="url(#woodFinish)" />
+              <rect x="368" y="348" width="20" height="32" rx="3" fill="#FFFFFF" />
+              <rect x="394" y="345" width="22" height="35" rx="3" fill="#0D9488" />
+              <rect x="422" y="348" width="20" height="32" rx="3" fill="#FFFFFF" />
+            </g>
+
+            {/* 5. BIANKA - CHARACTER PORTRAIT */}
+
+            {/* Back Hair Underlay */}
             <path
-              d="M74 85 C62 95 60 120 72 135 C90 148 135 148 152 135 C164 120 162 95 150 85 Z"
-              fill="url(#biankaHair)"
+              d="M170 180 C135 220 130 300 160 340 C200 375 300 375 340 340 C370 300 365 220 330 180 Z"
+              fill="url(#hairBase)"
             />
 
-            {/* Shoulders / Upper Body */}
+            {/* Body - White Doctor's Lab Coat Shoulders */}
             <path
-              d="M48 200 L56 142 C68 126 95 120 112 120 C129 120 156 126 168 142 L176 200 Z"
-              fill="url(#whiteCoat)"
+              d="M95 500 L120 330 C150 290 210 275 250 275 C290 275 350 290 380 330 L405 500 Z"
+              fill="url(#labCoat)"
             />
 
-            {/* Inner White Blouse Collar */}
+            {/* Inner White Blouse / Top */}
             <path
-              d="M96 112 L112 112 L128 112 L120 135 L104 135 Z"
+              d="M216 260 L250 260 L284 260 L270 320 L230 320 Z"
               fill="#FFFFFF"
             />
-            <line x1="112" y1="115" x2="112" y2="135" stroke="#E2E8F0" strokeWidth="1" />
+            <line x1="250" y1="262" x2="250" y2="320" stroke="#E2E8F0" strokeWidth="2" />
 
             {/* Neck */}
             <path
-              d="M99 98 L99 116 C105 122 119 122 125 116 L125 98 Z"
-              fill="url(#biankaSkin)"
+              d="M222 225 L222 272 C236 285 264 285 278 272 L278 225 Z"
+              fill="url(#skinTone)"
+            />
+            {/* Neck Shadow under Chin */}
+            <path
+              d="M224 225 C236 248 264 248 276 225 Z"
+              fill="#F29D78"
+              opacity="0.6"
             />
 
-            {/* Head / Face Oval */}
-            <ellipse cx="112" cy="80" rx="28" ry="32" fill="url(#biankaSkin)" />
+            {/* Face Oval */}
+            <ellipse cx="250" cy="180" rx="64" ry="76" fill="url(#skinTone)" />
 
-            {/* Cheeks & Blushing */}
-            <ellipse cx="94" cy="86" rx="6" ry="3.5" fill="#F43F5E" opacity="0.25" />
-            <ellipse cx="130" cy="86" rx="6" ry="3.5" fill="#F43F5E" opacity="0.25" />
+            {/* Cheeks Rosy Blush */}
+            <circle cx="210" cy="195" r="22" fill="url(#cheekBlush)" />
+            <circle cx="290" cy="195" r="22" fill="url(#cheekBlush)" />
 
-            {/* Almond Eyes (Warm Brown) */}
+            {/* Almond Eyes (Warm Hazel-Brown) */}
             {/* Left Eye */}
-            <path d="M92 74 Q100 70 106 74 Q100 78 92 74 Z" fill="#FFFFFF" />
-            <ellipse cx="99" cy="74" rx="3.5" ry="3.5" fill="#451A03" />
-            <circle cx="100.2" cy="72.8" r="1.2" fill="#FFFFFF" />
-            <path d="M91 73 Q100 68 107 73" stroke="#262626" strokeWidth="1.8" fill="none" strokeLinecap="round" />
-            {/* Left Eyebrow */}
-            <path d="M90 66 Q98 62 106 65" stroke="#291104" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+            <g id="leftEye">
+              <path d="M205 168 Q222 160 236 168 Q222 178 205 168 Z" fill="#FFFFFF" />
+              <ellipse cx="221" cy="168" rx="8.5" ry="8.5" fill="#4A1E07" />
+              <circle cx="221" cy="168" r="4.5" fill="#1C0A02" />
+              {/* Sparkle Catchlight */}
+              <circle cx="224" cy="165" r="2.8" fill="#FFFFFF" />
+              <circle cx="218" cy="171" r="1.2" fill="#FFFFFF" opacity="0.8" />
+              {/* Eyeliner & Lashes */}
+              <path d="M203 167 Q222 157 238 167" stroke="#24130C" strokeWidth="3.2" fill="none" strokeLinecap="round" />
+              {/* Eyelid crease */}
+              <path d="M207 159 Q222 153 234 160" stroke="#D18765" strokeWidth="1.8" fill="none" />
+              {/* Eyebrow */}
+              <path d="M200 148 Q220 141 237 147" stroke="#2E170E" strokeWidth="4.2" fill="none" strokeLinecap="round" />
+            </g>
 
             {/* Right Eye */}
-            <path d="M118 74 Q124 70 132 74 Q124 78 118 74 Z" fill="#FFFFFF" />
-            <ellipse cx="125" cy="74" rx="3.5" ry="3.5" fill="#451A03" />
-            <circle cx="126.2" cy="72.8" r="1.2" fill="#FFFFFF" />
-            <path d="M117 73 Q124 68 133 73" stroke="#262626" strokeWidth="1.8" fill="none" strokeLinecap="round" />
-            {/* Right Eyebrow */}
-            <path d="M118 65 Q126 62 134 66" stroke="#291104" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+            <g id="rightEye">
+              <path d="M264 168 Q278 160 295 168 Q278 178 264 168 Z" fill="#FFFFFF" />
+              <ellipse cx="279" cy="168" rx="8.5" ry="8.5" fill="#4A1E07" />
+              <circle cx="279" cy="168" r="4.5" fill="#1C0A02" />
+              {/* Sparkle Catchlight */}
+              <circle cx="282" cy="165" r="2.8" fill="#FFFFFF" />
+              <circle cx="276" cy="171" r="1.2" fill="#FFFFFF" opacity="0.8" />
+              {/* Eyeliner & Lashes */}
+              <path d="M262 167 Q278 157 297 167" stroke="#24130C" strokeWidth="3.2" fill="none" strokeLinecap="round" />
+              {/* Eyelid crease */}
+              <path d="M266 160 Q278 153 293 159" stroke="#D18765" strokeWidth="1.8" fill="none" />
+              {/* Eyebrow */}
+              <path d="M263 147 Q280 141 300 148" stroke="#2E170E" strokeWidth="4.2" fill="none" strokeLinecap="round" />
+            </g>
 
-            {/* Nose */}
+            {/* Slender Feminine Nose */}
             <path
-              d="M112 75 L114 83 C114 85 110 86 109 85"
-              stroke="#EA580C"
-              strokeWidth="1.2"
+              d="M250 168 L253 192 C254 197 246 200 243 198"
+              stroke="#EA7D4A"
+              strokeWidth="2.4"
               fill="none"
               strokeLinecap="round"
-              opacity="0.65"
             />
 
-            {/* Warm Friendly Smile */}
-            <path
-              d="M101 92 Q112 102 123 92 Q112 96 101 92 Z"
-              fill="#E11D48"
-            />
-            {/* Teeth */}
-            <path
-              d="M104 93 Q112 97 120 93 Q112 95 104 93 Z"
-              fill="#FFFFFF"
-            />
+            {/* Warm Friendly Smile with Teeth */}
+            <g id="biankaSmile">
+              {/* Lip Contour Base */}
+              <path
+                d="M226 212 Q250 236 274 212 Q250 220 226 212 Z"
+                fill="#D9485C"
+              />
+              {/* Pure White Upper Teeth */}
+              <path
+                d="M232 214 Q250 226 268 214 Q250 219 232 214 Z"
+                fill="#FFFFFF"
+              />
+              {/* Subtle Teeth Dividers */}
+              <line x1="250" y1="216" x2="250" y2="223" stroke="#F1F5F9" strokeWidth="1" />
+              {/* Lower Lip fullness and gloss */}
+              <path
+                d="M233 222 Q250 236 267 222 Q250 231 233 222 Z"
+                fill="#E11D48"
+              />
+              {/* Lip shine highlight */}
+              <ellipse cx="250" cy="227" rx="7" ry="2" fill="#FDA4AF" opacity="0.6" />
+            </g>
 
-            {/* Ears */}
-            <ellipse cx="83" cy="80" rx="3.5" ry="6.5" fill="url(#biankaSkin)" />
-            <ellipse cx="141" cy="80" rx="3.5" ry="6.5" fill="url(#biankaSkin)" />
-
-            {/* Brunette Bob Haircut with Side Part */}
+            {/* Brunette Bob Haircut with Silky Strands & Volume */}
             <path
-              d="M83 75 C82 50 110 40 128 44 C142 47 148 60 146 76 C144 88 142 98 138 104 C134 98 132 82 130 75 C118 58 100 62 90 74 C86 79 84 88 82 96 C80 88 83 80 83 75 Z"
-              fill="url(#biankaHair)"
+              d="M185 170 C182 110 240 85 285 95 C320 102 334 135 330 175 C325 205 320 235 310 250 C300 235 295 195 290 175 C265 135 220 145 200 172 C192 184 188 205 184 225 C180 205 185 185 185 170 Z"
+              fill="url(#hairBase)"
             />
-            {/* Hair bang highlight */}
+            {/* Sweeping Fringe / Bang Highlight on Forehead */}
             <path
-              d="M98 48 C115 48 134 54 140 68 C130 60 116 57 104 60 C98 62 94 65 91 70 C92 62 94 54 98 48 Z"
+              d="M218 105 C255 105 300 120 312 152 C290 134 260 128 232 135 C218 140 210 148 202 160 C205 140 210 120 218 105 Z"
               fill="url(#hairHighlight)"
             />
 
-            {/* White Coat Lapels */}
+            {/* Doctor's Lab Coat Lapels */}
+            {/* Left Lapel (Viewer's Left) */}
             <path
-              d="M74 135 L94 116 L108 140 L96 166 L68 152 Z"
+              d="M165 315 L215 270 L242 330 L215 390 L150 360 Z"
               fill="#FFFFFF"
               stroke="#E2E8F0"
-              strokeWidth="0.8"
+              strokeWidth="2"
             />
+            {/* Right Lapel (Viewer's Right) */}
             <path
-              d="M150 135 L130 116 L116 140 L128 166 L156 152 Z"
+              d="M335 315 L285 270 L258 330 L285 390 L350 360 Z"
               fill="#FFFFFF"
               stroke="#E2E8F0"
-              strokeWidth="0.8"
+              strokeWidth="2"
             />
 
-            {/* Name Tag: "BIANKA" */}
-            <rect
-              x="126"
-              y="142"
-              width="26"
-              height="10"
-              rx="2"
-              fill="#FFFFFF"
-              stroke="#0284C7"
-              strokeWidth="1"
-            />
-            <text
-              x="139"
-              y="149"
-              fill="#0F172A"
-              fontSize="5"
-              fontFamily="Arial, system-ui, sans-serif"
-              fontWeight="900"
-              textAnchor="middle"
-              letterSpacing="0.6"
-            >
-              BIANKA
-            </text>
+            {/* Name Badge ("BIANKA") on Right Lapel */}
+            <g id="biankaNameTag">
+              <rect
+                x="280"
+                y="325"
+                width="64"
+                height="24"
+                rx="4"
+                fill="#FFFFFF"
+                stroke="#0284C7"
+                strokeWidth="2"
+                filter="url(#softGlow)"
+              />
+              <text
+                x="312"
+                y="341"
+                fill="#0F172A"
+                fontSize="12"
+                fontFamily="system-ui, -apple-system, sans-serif"
+                fontWeight="900"
+                textAnchor="middle"
+                letterSpacing="1.5"
+              >
+                BIANKA
+              </text>
+            </g>
 
-            {/* Crossed Arms */}
+            {/* CROSSED ARMS (Signature Professional Pose) */}
+            {/* Left Forearm Folded Under */}
             <path
-              d="M58 150 C58 175 75 186 105 186 L145 184 L145 168 L105 170 C85 170 76 162 72 150 Z"
+              d="M130 355 C130 415 170 440 235 440 L325 435 L325 395 L235 400 C190 400 170 380 160 355 Z"
               fill="url(#coatShadow)"
               stroke="#CBD5E1"
-              strokeWidth="0.8"
+              strokeWidth="2"
             />
+            {/* Right Forearm Folded Across Over */}
             <path
-              d="M166 150 C166 175 145 188 112 188 L78 184 L78 168 L112 170 C134 170 148 162 152 150 Z"
-              fill="url(#whiteCoat)"
+              d="M370 355 C370 415 325 445 255 445 L175 435 L175 395 L255 400 C305 400 330 380 340 355 Z"
+              fill="url(#labCoat)"
               stroke="#CBD5E1"
-              strokeWidth="0.8"
+              strokeWidth="2"
             />
-            {/* Hands */}
-            <ellipse cx="76" cy="176" rx="7" ry="5" fill="url(#biankaSkin)" />
-            <ellipse cx="146" cy="176" rx="7" ry="5" fill="url(#biankaSkin)" />
+            {/* Hands Gently Resting on Folded Arms */}
+            <ellipse cx="170" cy="415" rx="16" ry="12" fill="url(#skinTone)" />
+            <ellipse cx="330" cy="415" rx="16" ry="12" fill="url(#skinTone)" />
           </g>
         </svg>
       )}
 
-      {/* Hover Camera Overlay for Easy One-Click Replacement */}
-      {isEditable && (
-        <div className="absolute inset-0 bg-[#0F172A]/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity duration-200 text-white z-10">
-          <Camera className="w-5 h-5 text-white drop-shadow-md animate-pulse" />
-          <span className="text-[9px] font-bold mt-1 text-[#38BDF8] tracking-tight">
-            {isUploading ? 'Subiendo...' : 'Cambiar Foto'}
-          </span>
-        </div>
-      )}
-
+      {/* Online Status Dot */}
       {showBadge && (
         <span
-          className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-[#10B981] border-2 border-white rounded-full shadow-xs z-20"
-          title="En línea para acompañarte"
+          className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-[#10B981] border-2 border-white rounded-full shadow-xs pointer-events-none"
+          title="En línea"
         />
       )}
     </div>

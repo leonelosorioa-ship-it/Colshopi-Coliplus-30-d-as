@@ -11,8 +11,7 @@ import {
   Info,
   Lock,
   MessageCircle,
-  ExternalLink,
-  Camera
+  ExternalLink
 } from 'lucide-react';
 import { DigestiveAngle, UserProfile } from '../types';
 import {
@@ -215,46 +214,83 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({
   const whatsappCodeUrl = getWhatsAppCodeRequestUrl(name, whatsapp);
 
   return (
-    <div className="w-full max-w-xl mx-auto py-2 sm:py-6 px-1 sm:px-0">
+    <div className="w-full max-w-xl mx-auto py-2 sm:py-6 px-3 sm:px-4">
       
       {/* Outer Card */}
-      <div className="w-full bg-white rounded-3xl shadow-2xl border border-[#E2E8F0] overflow-hidden">
+      <div className="w-full bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-[#E2E8F0] overflow-hidden">
         
-        {/* CARD DARK HEADER - Exactly matching Portada TY */}
-        <div className="bg-[#0D1926] text-white px-5 py-4 sm:px-6 sm:py-5 flex items-center justify-between border-b border-[#1E293B]">
-          <div className="flex items-center space-x-2.5">
-            <ColShopiLogo size={32} className="shrink-0" />
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="text-[10px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded-full bg-[#0F766E]/60 text-[#5EEAD4] border border-[#14B8A6]/40">
-                  Acceso Exclusivo Compradoras
+        {/* CARD DARK HEADER - Clean, modern, responsive */}
+        <div className="bg-[#0D1926] text-white px-4 py-3.5 sm:px-6 sm:py-5 border-b border-[#1E293B]">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center space-x-2.5 min-w-0">
+              <ColShopiLogo size={32} className="shrink-0" />
+              <div className="min-w-0">
+                <span className="inline-block text-[9px] sm:text-[10px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded-full bg-[#0F766E]/60 text-[#5EEAD4] border border-[#14B8A6]/40 truncate">
+                  Compradoras VIP
                 </span>
+                <h1 className="text-xs sm:text-base font-extrabold text-white tracking-tight truncate mt-0.5">
+                  Activación Protocolo 30D
+                </h1>
               </div>
-              <h1 className="text-sm sm:text-base font-extrabold text-white tracking-tight mt-0.5">
-                ColiFem 30D • Activación de Protocolo
-              </h1>
+            </div>
+
+            <div className="flex items-center space-x-2 shrink-0">
+              {onInstallPWA && (
+                <button
+                  type="button"
+                  onClick={onInstallPWA}
+                  className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-lg bg-[#1E293B] hover:bg-[#334155] text-white text-[11px] font-semibold border border-[#475569]/40 transition-colors"
+                >
+                  <Download className="w-3 h-3 mr-1 text-[#38BDF8]" />
+                  Instalar
+                </button>
+              )}
+              <div className="text-[11px] font-mono font-bold text-[#38BDF8] bg-[#0F172A] px-2.5 py-1 rounded-lg border border-[#1E293B] shadow-inner">
+                Paso {step} de 4
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2.5">
-            {onInstallPWA && (
-              <button
-                type="button"
-                onClick={onInstallPWA}
-                className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-lg bg-[#1E293B] hover:bg-[#334155] text-white text-[11px] font-semibold border border-[#475569]/40 transition-colors"
-              >
-                <Download className="w-3 h-3 mr-1 text-[#38BDF8]" />
-                Instalar App
-              </button>
-            )}
-            <div className="text-[11px] font-mono font-bold text-[#38BDF8] bg-[#0F172A] px-2.5 py-1 rounded-lg border border-[#1E293B] shadow-inner">
-              Paso {step} de 4
-            </div>
+          {/* 4-STEP VISUAL PROGRESS BAR */}
+          <div className="mt-3.5 pt-3 border-t border-[#1E293B]/70 grid grid-cols-4 gap-1.5 text-center">
+            {[
+              { num: 1, label: 'Acceso VIP' },
+              { num: 2, label: 'Enfoque' },
+              { num: 3, label: 'Síntomas' },
+              { num: 4, label: 'Activación' }
+            ].map((s) => {
+              const isCurrent = step === s.num;
+              const isPast = step > s.num;
+              return (
+                <div key={s.num} className="flex flex-col items-center">
+                  <div
+                    className={`w-full h-1 rounded-full mb-1 transition-all ${
+                      isPast
+                        ? 'bg-[#10B981]'
+                        : isCurrent
+                        ? 'bg-[#38BDF8]'
+                        : 'bg-[#334155]'
+                    }`}
+                  />
+                  <span
+                    className={`text-[9px] sm:text-[10px] font-semibold truncate ${
+                      isCurrent
+                        ? 'text-[#38BDF8] font-bold'
+                        : isPast
+                        ? 'text-[#10B981]'
+                        : 'text-[#64748B]'
+                    }`}
+                  >
+                    {s.label}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
         {/* CARD BODY CONTENT */}
-        <div className="p-5 sm:p-7">
+        <div className="p-4 sm:p-6">
           <AnimatePresence mode="wait">
             
             {/* ================= STEP 1: PORTADA TY EXACT FORM ================= */}
@@ -264,40 +300,29 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="space-y-5"
+                className="space-y-4 sm:space-y-5"
               >
                 {/* WELCOME BANNER WITH BIANKA */}
                 <div className="bg-[#0F172A] rounded-2xl p-4 sm:p-5 text-white border border-[#1E293B] shadow-lg">
-                  <div className="flex items-start space-x-3.5 sm:space-x-4">
-                    <div className="flex flex-col items-center shrink-0">
-                      <BiankaAvatar size={70} showBadge isEditable className="mt-0.5 shadow-md ring-2 ring-[#38BDF8]/40" />
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          const input = (e.currentTarget.previousElementSibling as HTMLElement)?.querySelector('input[type="file"]') as HTMLInputElement;
-                          input?.click();
-                        }}
-                        className="text-[10px] text-[#38BDF8] hover:text-[#7DD3FC] font-medium mt-1 transition-colors flex items-center gap-1 cursor-pointer"
-                        title="Haz clic para subir Bianka en Circulo.jpg"
-                      >
-                        <Camera className="w-3 h-3" />
-                        <span>Cambiar foto</span>
-                      </button>
-                    </div>
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3.5 sm:gap-4">
+                    <BiankaAvatar size={64} showBadge className="shrink-0 shadow-md ring-2 ring-[#38BDF8]/40" />
                     <div className="flex-1 min-w-0">
-                      <h2 className="text-sm sm:text-base font-bold text-white flex items-center flex-wrap gap-1">
-                        <span>¡Bienvenida a ColShopi Tienda! Soy Bianka</span>
+                      <div className="inline-block text-[10px] font-bold text-[#34D399] bg-[#064E3B]/70 px-2 py-0.5 rounded-full mb-1">
+                        Tu Asistente Oficial de Bienestar
+                      </div>
+                      <h2 className="text-sm sm:text-base font-bold text-white flex items-center justify-center sm:justify-start gap-1">
+                        <span>¡Bienvenida a ColShopi! Soy Bianka</span>
                         <span>💚</span>
                       </h2>
                       <p className="text-xs text-[#94A3B8] leading-relaxed mt-1">
-                        Soy tu Asistente Virtual y Guía de Bienestar. ColShopi es la única Tienda Online Naturista con una App Exclusiva para acompañar tu reto de hábitos con <strong className="text-[#38BDF8]">Coli Plus</strong>. Para activar tu acceso de 30 días, ingresa tu código VIP de 6 dígitos.
+                        Acompañaré tu reto de 30 días con <strong className="text-[#38BDF8]">Coli Plus</strong>. Para activar tu acceso personalizado, ingresa tu código VIP de 6 dígitos.
                       </p>
                     </div>
                   </div>
 
-                  {/* Banner Bottom Action: Request Code */}
-                  <div className="mt-4 pt-3.5 border-t border-[#1E293B] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
-                    <div className="flex items-center text-xs text-[#CBD5E1] font-medium">
+                  {/* Banner Bottom Action: Request Code via WhatsApp */}
+                  <div className="mt-3.5 pt-3 border-t border-[#1E293B] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+                    <div className="flex items-center justify-center sm:justify-start text-xs text-[#CBD5E1] font-medium">
                       <Lock className="w-3.5 h-3.5 text-[#F59E0B] mr-1.5 shrink-0" />
                       <span>¿Aún no tienes tu código de 6 dígitos?</span>
                     </div>
@@ -307,10 +332,10 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({
                       href={whatsappCodeUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center px-3.5 py-2 rounded-xl bg-[#10B981] hover:bg-[#059669] text-white text-xs font-bold transition-all shadow-md active:scale-98"
+                      className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-[#10B981] hover:bg-[#059669] text-white text-xs font-bold transition-all shadow-md active:scale-95 text-center"
                     >
                       <MessageCircle className="w-3.5 h-3.5 mr-1.5 shrink-0" />
-                      <span>Solicitar mi Código de acceso a Bianka</span>
+                      <span>Solicitar mi Código VIP a Bianka</span>
                     </a>
                   </div>
                 </div>
@@ -324,10 +349,10 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({
                 )}
 
                 {/* FORM FIELDS */}
-                <div className="space-y-4">
+                <div className="space-y-3.5 sm:space-y-4">
                   {/* Field 1: TU NOMBRE COMPLETO * */}
                   <div>
-                    <label className="block text-[11px] sm:text-xs font-bold text-[#334155] uppercase tracking-wider mb-1.5">
+                    <label className="block text-[11px] sm:text-xs font-bold text-[#334155] uppercase tracking-wider mb-1">
                       TU NOMBRE COMPLETO *
                     </label>
                     <input
@@ -340,14 +365,14 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({
                         setName(e.target.value);
                         if (generalError) setGeneralError('');
                       }}
-                      className="w-full px-4 py-3 rounded-xl border border-[#CBD5E1] focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] focus:outline-hidden text-sm text-[#0F172A] bg-white placeholder-[#94A3B8]"
+                      className="w-full px-3.5 py-2.5 sm:py-3 rounded-xl border border-[#CBD5E1] focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] focus:outline-hidden text-base sm:text-sm text-[#0F172A] bg-white placeholder-[#94A3B8]"
                     />
                   </div>
 
                   {/* Field 2 & 3: WHATSAPP DE TU PEDIDO * & RANGO DE EDAD */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <label className="block text-[11px] sm:text-xs font-bold text-[#334155] uppercase tracking-wider mb-1.5">
+                      <label className="block text-[11px] sm:text-xs font-bold text-[#334155] uppercase tracking-wider mb-1">
                         WHATSAPP DE TU PEDIDO *
                       </label>
                       <input
@@ -360,22 +385,22 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({
                           setWhatsapp(e.target.value);
                           if (generalError) setGeneralError('');
                         }}
-                        className="w-full px-4 py-3 rounded-xl border border-[#CBD5E1] focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] focus:outline-hidden text-sm text-[#0F172A] bg-white placeholder-[#94A3B8]"
+                        className="w-full px-3.5 py-2.5 sm:py-3 rounded-xl border border-[#CBD5E1] focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] focus:outline-hidden text-base sm:text-sm text-[#0F172A] bg-white placeholder-[#94A3B8]"
                       />
-                      <p className="text-[11px] text-[#64748B] mt-1">
+                      <p className="text-[10px] sm:text-[11px] text-[#64748B] mt-1">
                         Número con el que solicitaste tu Coli Plus
                       </p>
                     </div>
 
                     <div>
-                      <label className="block text-[11px] sm:text-xs font-bold text-[#334155] uppercase tracking-wider mb-1.5">
+                      <label className="block text-[11px] sm:text-xs font-bold text-[#334155] uppercase tracking-wider mb-1">
                         RANGO DE EDAD
                       </label>
                       <select
                         id="select-user-age-range"
                         value={ageRange}
                         onChange={(e) => setAgeRange(e.target.value)}
-                        className="w-full px-3.5 py-3 rounded-xl border border-[#CBD5E1] focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] focus:outline-hidden text-sm text-[#0F172A] bg-white"
+                        className="w-full px-3.5 py-2.5 sm:py-3 rounded-xl border border-[#CBD5E1] focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] focus:outline-hidden text-base sm:text-sm text-[#0F172A] bg-white"
                       >
                         {AGE_RANGES.map((r) => (
                           <option key={r} value={r}>
@@ -388,7 +413,7 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({
 
                   {/* Field 4: TU CORREO ELECTRÓNICO PRINCIPAL * */}
                   <div>
-                    <label className="block text-[11px] sm:text-xs font-bold text-[#334155] uppercase tracking-wider mb-1.5">
+                    <label className="block text-[11px] sm:text-xs font-bold text-[#334155] uppercase tracking-wider mb-1">
                       TU CORREO ELECTRÓNICO PRINCIPAL *
                     </label>
                     <input
@@ -398,17 +423,17 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({
                       placeholder="ejemplo@correo.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-[#CBD5E1] focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] focus:outline-hidden text-sm text-[#0F172A] bg-white placeholder-[#94A3B8]"
+                      className="w-full px-3.5 py-2.5 sm:py-3 rounded-xl border border-[#CBD5E1] focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] focus:outline-hidden text-base sm:text-sm text-[#0F172A] bg-white placeholder-[#94A3B8]"
                     />
 
                     {/* Email Explanation Callout Box */}
-                    <div className="mt-2.5 p-3.5 rounded-xl bg-[#F0F9FF] border border-[#BAE6FD] text-[#0369A1] text-xs">
-                      <div className="flex items-center space-x-1.5 font-bold text-[#0284C7] mb-1">
+                    <div className="mt-2 p-3 rounded-xl bg-[#F0F9FF] border border-[#BAE6FD] text-[#0369A1] text-xs">
+                      <div className="flex items-center space-x-1.5 font-bold text-[#0284C7] mb-0.5">
                         <Info className="w-3.5 h-3.5 text-[#0284C7] shrink-0" />
                         <span>¿Por qué te solicitamos tu correo?</span>
                       </div>
-                      <p className="text-[11px] leading-relaxed text-[#075985]">
-                        Al finalizar tus 30 días con Coli Plus, Bianka generará tu <strong className="font-semibold text-[#0369A1]">"Bitácora de Bienestar y Hábitos ColiFem 30D"</strong>, un resumen elaborado como guía de hábitos saludables (no médico) con el balance de tu constancia, hidratación, bienestar diario y pautas de continuidad.
+                      <p className="text-[10px] sm:text-[11px] leading-relaxed text-[#075985]">
+                        Al finalizar tus 30 días, Bianka generará tu <strong className="font-semibold text-[#0369A1]">"Bitácora de Bienestar ColiFem 30D"</strong> con el balance de tu constancia, hábitos y pautas de continuidad.
                       </p>
                     </div>
                   </div>
@@ -417,7 +442,7 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({
                   <div className="pt-1">
                     <div className="flex items-center justify-between mb-1.5">
                       <label className="block text-[11px] sm:text-xs font-bold text-[#334155] uppercase tracking-wider">
-                        CÓDIGO DE ACTIVACIÓN ÚNICO (6 DÍGITOS NUMÉRICOS) *
+                        CÓDIGO DE ACTIVACIÓN ÚNICO (6 DÍGITOS) *
                       </label>
                       <span className={`text-xs font-mono font-bold ${accessCode.length === 6 ? 'text-[#0F766E]' : 'text-[#64748B]'}`}>
                         {accessCode.length}/6
@@ -438,14 +463,14 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({
                     {/* Footnote under code input */}
                     <div className="mt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between text-[11px] text-[#64748B] gap-1">
                       <div className="flex items-center text-[#64748B]">
-                        <Lock className="w-3 h-3 mr-1 text-[#94A3B8]" />
-                        <span>Asignado manualmente por ColShopi a cada compradora.</span>
+                        <Lock className="w-3 h-3 mr-1 text-[#94A3B8] shrink-0" />
+                        <span>Asignado por ColShopi a cada compradora.</span>
                       </div>
                       <a
                         href={whatsappCodeUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[#0F766E] hover:underline font-bold inline-flex items-center"
+                        className="text-[#0F766E] hover:underline font-bold inline-flex items-center self-start sm:self-auto"
                       >
                         <span>Pedir mi código por WhatsApp</span>
                         <ArrowRight className="w-3 h-3 ml-1" />

@@ -119,38 +119,38 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     <div className="space-y-8">
       
       {/* Overview Card */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#E2E8F0] shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+      <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-7 border border-[#E2E8F0] shadow-xs">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5 sm:gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#D1FAE5] text-[#065F46]">
               <Sparkles className="w-3.5 h-3.5 mr-1.5 text-[#059669]" />
               Programa Activo: {user.digestiveAngle}
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#0F172A] font-display">
+            <h1 className="text-xl sm:text-3xl font-bold text-[#0F172A] font-display">
               Guía de 30 Días con Bianka 💚
             </h1>
-            <p className="text-sm text-[#64748B] max-w-2xl leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#64748B] max-w-2xl leading-relaxed">
               4 fases de transformación para acompañar tu toma del suplemento funcional <span className="font-bold text-[#0F766E]">Coli Plus</span> (INVIMA NSA-0012423-2022).
             </p>
           </div>
 
           {/* Progress Bar & Current Day Badge */}
-          <div className="bg-[#FAF6F0] p-5 rounded-2xl border border-[#E2E8F0] min-w-[260px]">
+          <div className="bg-[#FAF6F0] p-4 sm:p-5 rounded-2xl border border-[#E2E8F0] w-full md:min-w-[260px] md:w-auto">
             <div className="flex items-center justify-between text-xs font-bold text-[#334155] mb-2">
               <span>PROGRESO DEL RETO</span>
               <span className="text-[#0F766E] font-mono text-sm">{completedCount} / 30 Días ({progressPercent}%)</span>
             </div>
-            <div className="w-full bg-[#E2E8F0] h-3 rounded-full overflow-hidden mb-3">
+            <div className="w-full bg-[#E2E8F0] h-2.5 sm:h-3 rounded-full overflow-hidden mb-3">
               <div
                 className="bg-linear-to-r from-[#0F766E] via-[#10B981] to-[#F59E0B] h-full transition-all duration-700"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
-            <div className="flex items-center justify-between text-[11px] text-[#64748B]">
+            <div className="flex items-center justify-between text-xs text-[#64748B]">
               <span>Día actual: <strong className="text-[#0F766E]">Día {Math.min(30, maxCompleted + 1)}</strong></span>
               <button
                 onClick={() => onOpenTracker(Math.min(30, maxCompleted + 1))}
-                className="text-[#0F766E] font-bold hover:underline"
+                className="text-[#0F766E] font-bold hover:underline cursor-pointer"
               >
                 Chequeo de Hoy →
               </button>
@@ -159,23 +159,23 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         </div>
 
         {/* Phase Filter Tabs & Demo Mode Toggle */}
-        <div className="mt-8 pt-6 border-t border-[#E2E8F0] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="mt-6 pt-5 border-t border-[#E2E8F0] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center space-x-1.5 sm:space-x-2 overflow-x-auto pb-1 scrollbar-none w-full sm:w-auto">
             <button
               onClick={() => setFilterPhase('all')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 filterPhase === 'all'
                   ? 'bg-[#0F766E] text-white shadow-xs'
                   : 'bg-[#F1F5F9] text-[#475569] hover:bg-[#E2E8F0]'
               }`}
             >
-              Todos los 30 Días
+              Todos (30 Días)
             </button>
             {PHASES_INFO.map((p) => (
               <button
                 key={p.phase}
                 onClick={() => setFilterPhase(p.phase)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                   filterPhase === p.phase
                     ? 'bg-[#0F766E] text-white shadow-xs'
                     : 'bg-[#F1F5F9] text-[#475569] hover:bg-[#E2E8F0]'
@@ -187,11 +187,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           </div>
 
           {/* Demo Simulation Switch */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 shrink-0">
             <button
               id="btn-toggle-demo-mode"
               onClick={() => setDemoMode(!demoMode)}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                 demoMode
                   ? 'bg-[#FEF3C7] border-[#F59E0B] text-[#92400E] shadow-xs'
                   : 'bg-white border-[#CBD5E1] text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]'
@@ -199,7 +199,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               title="Permite desbloquear días sin esperar las 24h obligatorias para demostración o revisión rápida"
             >
               <Zap className={`w-3.5 h-3.5 ${demoMode ? 'text-[#D97706]' : 'text-[#94A3B8]'}`} />
-              <span>{demoMode ? '⚡ Modo Demo: Desbloqueo Inmediato' : '⚡ Modo Demostración'}</span>
+              <span>{demoMode ? '⚡ Modo Demo Activo' : '⚡ Modo Demo'}</span>
             </button>
           </div>
         </div>

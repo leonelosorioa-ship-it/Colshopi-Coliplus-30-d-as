@@ -66,7 +66,7 @@ export const SixDigitInput: React.FC<SixDigitInputProps> = ({
   return (
     <div className="space-y-2">
       <div
-        className={`flex items-center justify-between p-3.5 sm:p-4 bg-[#F8FAFC] rounded-2xl border-2 transition-all ${
+        className={`flex items-center justify-between px-2 py-3 sm:p-4 bg-[#F8FAFC] rounded-2xl border-2 transition-all ${
           error
             ? 'border-red-400 bg-red-50/40 ring-1 ring-red-300'
             : value.length === 6
@@ -75,11 +75,11 @@ export const SixDigitInput: React.FC<SixDigitInputProps> = ({
         }`}
         onPaste={handlePaste}
       >
-        <div className="flex items-center justify-around w-full gap-2 sm:gap-3">
+        <div className="flex items-center justify-between w-full gap-1.5 sm:gap-2.5">
           {[0, 1, 2, 3, 4, 5].map((index) => {
             const hasChar = !!digits[index];
             return (
-              <div key={index} className="relative flex items-center justify-center flex-1">
+              <div key={index} className="relative flex items-center justify-center flex-1 min-w-0">
                 <input
                   ref={(el) => {
                     inputRefs.current[index] = el;
@@ -92,7 +92,7 @@ export const SixDigitInput: React.FC<SixDigitInputProps> = ({
                   onChange={(e) => handleDigitChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   onFocus={(e) => e.target.select()}
-                  className={`w-10 h-12 sm:w-12 sm:h-14 text-center font-mono font-bold text-xl sm:text-2xl rounded-xl border bg-white shadow-inner focus:outline-hidden transition-all ${
+                  className={`w-full max-w-[42px] sm:max-w-[48px] h-11 sm:h-14 text-center font-mono font-bold text-lg sm:text-2xl rounded-xl border bg-white shadow-inner focus:outline-hidden transition-all ${
                     hasChar
                       ? 'text-[#0F172A] border-[#0F766E] bg-white shadow-xs'
                       : 'text-transparent border-[#E2E8F0] focus:border-[#0F766E]'
@@ -100,7 +100,7 @@ export const SixDigitInput: React.FC<SixDigitInputProps> = ({
                   aria-label={`Dígito ${index + 1}`}
                 />
                 {!hasChar && (
-                  <span className="pointer-events-none absolute text-2xl font-black text-[#94A3B8]/60 select-none">
+                  <span className="pointer-events-none absolute text-xl sm:text-2xl font-black text-[#94A3B8]/60 select-none">
                     •
                   </span>
                 )}

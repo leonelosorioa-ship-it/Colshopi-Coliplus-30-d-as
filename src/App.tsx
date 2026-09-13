@@ -288,7 +288,7 @@ export default function App() {
       )}
 
       {/* Main View Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+      <main className={`flex-1 max-w-7xl w-full mx-auto ${!user ? 'px-2 py-3 sm:px-6 sm:py-6' : 'p-3 sm:p-6 lg:p-8 pb-24 md:pb-8'}`}>
         {!user ? (
           /* ONBOARDING & VALIDATION FLOW - Matching Portada TY Home Screen */
           <OnboardingQuiz
@@ -301,8 +301,8 @@ export default function App() {
           <div className="space-y-6">
             
             {/* Top Quick Status Pill */}
-            <div className="flex flex-wrap items-center justify-between text-xs text-[#64748B] pb-1">
-              <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap items-center justify-between text-xs text-[#64748B] pb-1 gap-2">
+              <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                 <span>Hola, <strong>{user.name}</strong></span>
                 <span>•</span>
                 <span className="font-mono text-[#0F766E] font-bold">{user.id}</span>
@@ -312,17 +312,17 @@ export default function App() {
                 </span>
               </div>
 
-              <div className="flex items-center space-x-3 mt-2 sm:mt-0">
+              <div className="flex items-center space-x-3">
                 <button
                   onClick={handleLoadDemo}
-                  className="text-[11px] text-[#0F766E] hover:underline font-semibold"
+                  className="text-[11px] text-[#0F766E] hover:underline font-semibold cursor-pointer"
                 >
-                  Cargar Perfil Demo (Día 14)
+                  Cargar Demo (Día 14)
                 </button>
                 <span>•</span>
                 <button
                   onClick={handleResetAccount}
-                  className="text-[11px] text-[#94A3B8] hover:text-red-600 font-semibold"
+                  className="text-[11px] text-[#94A3B8] hover:text-red-600 font-semibold cursor-pointer"
                 >
                   Reiniciar
                 </button>
@@ -383,33 +383,42 @@ export default function App() {
         )}
       </main>
 
-      {/* MOBILE BOTTOM NAVIGATION BAR */}
+      {/* MOBILE BOTTOM NAVIGATION BAR - Sleek floating frosted bar */}
       {user && (
-        <div className="md:hidden sticky bottom-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#E2E8F0] px-3 py-2 flex items-center justify-around shadow-lg">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-[#E2E8F0] px-2 py-1.5 flex items-center justify-around shadow-2xl safe-bottom">
           {[
             { id: 'calendar', label: 'Protocolo', icon: CalendarIcon },
-            { id: 'tracker', label: 'Tracker', icon: Activity },
+            { id: 'tracker', label: 'Mi Día', icon: Activity },
             { id: 'charts', label: 'Métricas', icon: TrendingUp },
             { id: 'recipes', label: 'Recetas', icon: Utensils },
-            { id: 'chat', label: 'Bianka', icon: MessageCircle }
+            { id: 'chat', label: 'Bianka', icon: MessageCircle, isLive: true }
           ].map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
+                id={`btn-mobile-nav-${item.id}`}
                 onClick={() => {
                   setActiveTab(item.id as any);
                   if (item.id !== 'recipes') setViewRecipeId(null);
                 }}
-                className={`flex flex-col items-center justify-center p-1 text-[10px] font-bold transition-all ${
+                className={`relative flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all select-none cursor-pointer ${
                   isActive
-                    ? 'text-[#0F766E]'
+                    ? 'bg-[#ECFDF5] text-[#0F766E] font-bold shadow-2xs'
                     : 'text-[#64748B] hover:text-[#0F172A]'
                 }`}
               >
-                <Icon className={`w-5 h-5 mb-0.5 ${isActive ? 'text-[#0F766E]' : 'text-[#94A3B8]'}`} />
-                <span>{item.label}</span>
+                <div className="relative">
+                  <Icon className={`w-5 h-5 mb-0.5 ${isActive ? 'text-[#0F766E]' : 'text-[#94A3B8]'}`} />
+                  {item.isLive && (
+                    <span className="absolute -top-0.5 -right-1 flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] leading-tight">{item.label}</span>
               </button>
             );
           })}
@@ -417,7 +426,7 @@ export default function App() {
       )}
 
       {/* FOOTER */}
-      <footer className="bg-[#FAF6F0] border-t border-[#E2E8F0] mt-12 py-8 px-4 sm:px-6">
+      <footer className="bg-[#FAF6F0] border-t border-[#E2E8F0] mt-12 py-8 px-4 sm:px-6 mb-16 md:mb-0">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-2 text-xs text-[#64748B] text-center">
           <span className="font-bold text-[#0F172A]">ColiFem 30D</span>
           <span>•</span>
