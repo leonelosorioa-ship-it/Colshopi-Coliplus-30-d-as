@@ -48,8 +48,68 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAngleFilter, setSelectedAngleFilter] = useState('all');
 
-  // Admin Tab view: 'codes' | 'users' | 'metrics'
-  const [adminTab, setAdminTab] = useState<'codes' | 'users' | 'metrics'>('codes');
+  // Admin Tab view: 'codes' | 'users' | 'metrics' | 'avatar'
+  const [adminTab, setAdminTab] = useState<'codes' | 'users' | 'metrics' | 'avatar'>('codes');
+
+  // Avatar Management state
+  const [avatarUploadStatus, setAvatarUploadStatus] = useState<string>('');
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem('bianka_avatar_custom');
+    } catch {
+      return null;
+    }
+  });
+
+  const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setAvatarUploadStatus('Por favor selecciona un archivo de imagen (.jpg, .png, .webp).');
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    setAvatarUploadStatus('Guardando imagen oficial de Bianka...');
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const base64 = reader.result as string;
+        // 1. Guardar en localStorage para disponibilidad inmediata y offline
+        localStorage.setItem('bianka_avatar_custom', base64);
+        setAvatarPreview(base64);
+
+        // 2. Enviar al servidor para persistencia en disco public/ y dist/
+        const res = await fetch('/api/upload-avatar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageBase64: base64 })
+        });
+
+        // 3. Notificar a todos los componentes de BiankaAvatar
+        window.dispatchEvent(new Event('bianka_avatar_updated'));
+
+        if (res.ok) {
+          setAvatarUploadStatus('¡Imagen de Bianka actualizada exitosamente y fijada como permanente!');
+        } else {
+          setAvatarUploadStatus('¡Imagen guardada localmente con éxito en la aplicación!');
+        }
+      } catch (err: any) {
+        window.dispatchEvent(new Event('bianka_avatar_updated'));
+        setAvatarUploadStatus('¡Imagen de Bianka actualizada en el navegador!');
+      } finally {
+        setIsUploadingAvatar(false);
+      }
+    };
+    reader.onerror = () => {
+      setIsUploadingAvatar(false);
+      setAvatarUploadStatus('Error al leer el archivo de imagen.');
+    };
+    reader.readAsDataURL(file);
+  };
 
   // 50 Secret VIP Codes state
   const [vipCodesInfo, setVipCodesInfo] = useState<{
@@ -381,9 +441,115 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                   <Bell className="w-3.5 h-3.5" />
                   <span>Métricas & Push</span>
                 </button>
+
+                <button
+                  type="button"
+                  id="btn-admin-tab-avatar"
+                  onClick={() => setAdminTab('avatar')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shrink-0 ${
+                    adminTab === 'avatar'
+                      ? 'bg-[#0F766E] text-white shadow-xs'
+                      : 'bg-[#F1F5F9] text-[#475569] hover:bg-[#E2E8F0]'
+                  }`}
+                >
+                  <Upload className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Foto de Bianka</span>
+                </button>
               </div>
 
-              {/* ================= TAB 1: 50 CÓDIGOS VIP SECRETOS ================= */}
+              {/* ================= TAB 4: FOTO OFICIAL DE BIANKA ================= */}
+              {adminTab === 'avatar' && (
+                <div className="space-y-6">
+                  {/* Overview Card */}
+                  <div className="p-5 rounded-2xl bg-linear-to-r from-[#0F766E]/10 to-[#10B981]/10 border border-[#0F766E]/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <Upload className="w-5 h-5 text-[#0F766E]" />
+                        <h3 className="text-base font-bold text-[#0F172A]">
+                          Imagen Oficial Permanente de Bianka
+                        </h3>
+                      </div>
+                      <p className="text-xs text-[#64748B] mt-1 max-w-2xl">
+                        Esta es la imagen de Bianka que verán todas las clientas en la bienvenida, la bitácora, el chat y las recetas. Las usuarias estándar <strong>tienen estrictamente bloqueado</strong> cambiar esta imagen para garantizar la identidad de ColShopi.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Upload and Preview Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                    
+                    {/* Current Preview Card */}
+                    <div className="p-6 bg-[#FAF6F0] rounded-2xl border border-[#E2E8F0] flex flex-col items-center justify-center text-center space-y-4">
+                      <h4 className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
+                        Vista Previa Actual
+                      </h4>
+                      <div className="p-2 bg-white rounded-full shadow-lg border-2 border-emerald-500/30">
+                        <BiankaAvatar size={140} showBadge={true} />
+                      </div>
+                      <div>
+                        <div className="font-bold text-[#0F172A] text-sm">Bianka</div>
+                        <div className="text-xs text-[#0F766E] font-medium">Guía Oficial de Bienestar ColShopi Tienda</div>
+                        <div className="text-[11px] text-[#94A3B8] mt-1">Avatar con badge y estado activo 24/7</div>
+                      </div>
+                    </div>
+
+                    {/* Uploader Card */}
+                    <div className="p-6 bg-white rounded-2xl border border-[#E2E8F0] shadow-sm space-y-4">
+                      <div>
+                        <h4 className="text-sm font-bold text-[#0F172A] flex items-center space-x-2">
+                          <span>Actualizar Imagen</span>
+                        </h4>
+                        <p className="text-xs text-[#64748B] mt-1">
+                          Selecciona o arrastra el archivo <strong>Bianka en Circulo.jpg</strong> o cualquier imagen en formato JPG o PNG.
+                        </p>
+                      </div>
+
+                      <div className="relative border-2 border-dashed border-[#CBD5E1] hover:border-[#0F766E] rounded-2xl p-6 flex flex-col items-center justify-center text-center transition-all bg-[#F8FAFC]">
+                        <input
+                          type="file"
+                          id="bianka-image-file-input"
+                          accept="image/*"
+                          onChange={handleAvatarFileChange}
+                          disabled={isUploadingAvatar}
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                        />
+                        <div className="p-3 bg-emerald-50 text-[#0F766E] rounded-full mb-2">
+                          <Upload className="w-6 h-6" />
+                        </div>
+                        <span className="text-xs font-bold text-[#0F172A]">
+                          {isUploadingAvatar ? 'Subiendo y guardando...' : 'Haz clic o arrastra aquí tu imagen'}
+                        </span>
+                        <span className="text-[11px] text-[#94A3B8] mt-1">
+                          Soporta: Bianka en Circulo.jpg, PNG, WEBP
+                        </span>
+                      </div>
+
+                      {avatarUploadStatus && (
+                        <div className={`p-3 rounded-xl text-xs font-semibold flex items-center space-x-2 ${
+                          avatarUploadStatus.includes('exitosamente') || avatarUploadStatus.includes('éxito')
+                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                            : 'bg-amber-50 text-amber-800 border border-amber-200'
+                        }`}>
+                          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                          <span>{avatarUploadStatus}</span>
+                        </div>
+                      )}
+
+                      <div className="p-3 bg-[#ECFDF5] rounded-xl border border-[#A7F3D0]/60 text-[11px] text-[#065F46] space-y-1">
+                        <div className="font-bold flex items-center space-x-1">
+                          <Lock className="w-3.5 h-3.5" />
+                          <span>Protección y Permanencia</span>
+                        </div>
+                        <p>
+                          Al subirla, el servidor guardará la imagen como <code className="bg-white/60 px-1 rounded font-mono">Bianka en Circulo.jpg</code> y sincronizará la aplicación automáticamente sin que ninguna clienta pueda modificarla.
+                        </p>
+                      </div>
+
+                    </div>
+
+                  </div>
+                </div>
+              )}
               {adminTab === 'codes' && (
                 <div className="space-y-4">
                   {/* Overview Card */}

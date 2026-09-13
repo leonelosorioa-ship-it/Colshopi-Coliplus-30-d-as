@@ -305,7 +305,7 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({
                 {/* WELCOME BANNER WITH BIANKA */}
                 <div className="bg-[#0F172A] rounded-2xl p-4 sm:p-5 text-white border border-[#1E293B] shadow-lg">
                   <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3.5 sm:gap-4">
-                    <BiankaAvatar size={64} showBadge className="shrink-0 shadow-md ring-2 ring-[#38BDF8]/40" />
+                    <BiankaAvatar id="bianka-avatar-welcome" size={64} showBadge className="shrink-0 shadow-md ring-2 ring-[#38BDF8]/40" />
                     <div className="flex-1 min-w-0">
                       <div className="inline-block text-[10px] font-bold text-[#34D399] bg-[#064E3B]/70 px-2 py-0.5 rounded-full mb-1">
                         Tu Asistente Oficial de Bienestar
