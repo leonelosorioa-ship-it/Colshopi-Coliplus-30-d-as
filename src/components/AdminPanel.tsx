@@ -43,8 +43,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const [selectedAngleFilter, setSelectedAngleFilter] = useState('all');
 
   // Push Broadcast state
-  const [pushTitle, setPushTitle] = useState('ColiPlus 30D - Mensaje de Marié');
-  const [pushBody, setPushBody] = useState('Recuerda tomar tu dosis de ColiPlus en agua fresca y completar tu chequeo diario.');
+  const [pushTitle, setPushTitle] = useState('ColiFem 30D - Mensaje de Bianka 💚');
+  const [pushBody, setPushBody] = useState('Recuerda tomar tu porción de Coli Plus en agua fresca y completar tu chequeo diario.');
   const [pushPhaseFilter, setPushPhaseFilter] = useState('all');
   const [pushStatusMsg, setPushStatusMsg] = useState('');
   const [isSendingPush, setIsSendingPush] = useState(false);
@@ -136,8 +136,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Usuarios ColiPlus');
-    XLSX.writeFile(wb, 'Reporte_Usuarios_ColiPlus_30D.xlsx');
+    XLSX.utils.book_append_sheet(wb, ws, 'Usuarios ColiFem');
+    XLSX.writeFile(wb, 'Reporte_Usuarios_ColiFem_30D.xlsx');
   };
 
   const filteredUsers = usersList.filter(u => {
@@ -346,7 +346,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                   <div className="flex items-center space-x-3">
                     <h3 className="text-sm font-bold text-[#0F172A] flex items-center">
                       <Users className="w-4 h-4 mr-1.5 text-[#0F766E]" />
-                      Directorio de Pacientes ColiPlus ({filteredUsers.length})
+                      Directorio de Usuarias ColiFem ({filteredUsers.length})
                     </h3>
 
                     <button

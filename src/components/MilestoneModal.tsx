@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { Award, Download, Share2, X, Sparkles, Heart } from 'lucide-react';
 import { generateDiplomaPDF } from '../utils/pdfGenerator';
-import { marieVoice } from '../utils/speechHelper';
+import { biankaVoice } from '../utils/speechHelper';
 
 interface MilestoneModalProps {
   dayNumber: number;
@@ -35,10 +35,10 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
 
       // Voice coaching congratulations
       const audioText = dayNumber === 30
-        ? `¡Felicidades con todo el corazón, ${userName}! Hoy completaste tus 30 días de transformación digestiva. Tu esfuerzo, constancia y amor por tu cuerpo han dado fruto. Tu colon está desinflamado y equilibrado. Descarga tu Diploma Oficial de Victoria Digestiva firmado con orgullo por ColShopi y por mí.`
-        : `¡Felicidades, ${userName}! Llegaste al Día 15, la mitad exacta del protocolo ColiPlus. Tu abdomen está respondiendo de forma increíble. Sigue adelante con la misma energía.`;
+        ? `¡Felicidades con todo el corazón, ${userName}! Hoy completaste tus 30 días de transformación digestiva. Tu esfuerzo, constancia y amor por tu bienestar han dado frutos maravillosos. Tu colon está ligero, desinflamado y equilibrado. Descarga tu Diploma Oficial de Victoria Digestiva firmado por ColShopi Tienda y por mí.`
+        : `¡Felicidades, ${userName}! Llegaste al Día 15, la mitad exacta de tu reto ColiFem 30D. Tu cuerpo está respondiendo de forma increíble a tu Coli Plus. Sigue adelante con la misma energía y cariño por tu digestión.`;
 
-      marieVoice.speak(audioText);
+      biankaVoice.speak(audioText);
     }
   }, [isOpen, dayNumber, userName]);
 
@@ -48,7 +48,7 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
 
   const handleShareWhatsApp = () => {
     const text = encodeURIComponent(
-      `🎉 ¡Acabo de completar el Protocolo de 30 Días con ColiPlus de ColShopi! Logré desinflamar mi colon, regular mi digestión y sentirme con una energía increíble. ¡Gracias a Marié y a la fórmula natural de ColiPlus!`
+      `🎉 ¡Acabo de completar el Reto de 30 Días con ColiFem y Coli Plus de ColShopi! Logré desinflamar mi colon, regular mi digestión y sentirme con una energía increíble. ¡Gracias a Bianka y a la fórmula natural de Coli Plus!`
     );
     window.open(`https://wa.me/?text=${text}`, '_blank');
   };
@@ -63,7 +63,7 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
       >
         <button
           onClick={() => {
-            marieVoice.stop();
+            biankaVoice.stop();
             onClose();
           }}
           className="absolute top-4 right-4 p-2 text-[#94A3B8] hover:text-[#0F172A] rounded-xl hover:bg-[#F1F5F9]"
@@ -86,22 +86,22 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
           </h2>
           <p className="text-xs sm:text-sm text-[#64748B] max-w-md mx-auto leading-relaxed">
             {isGraduation
-              ? 'Has culminado con éxito las 4 fases del protocolo: descompresión, regeneración de la mucosa, repoblación bacteriana y blindaje de hábitos.'
+              ? 'Has culminado con éxito las 4 fases del protocolo: reseteo y calma digestiva, restauración de mucosa, repoblación de microbiota y blindaje de hábitos.'
               : 'Has completado la desinflamación y reparación inicial. Tu microbiota ahora está lista para fortalecerse en las Fases 3 y 4.'}
           </p>
         </div>
 
-        {/* Marie Endorsement Box */}
+        {/* Bianka Endorsement Box */}
         <div className="p-4 rounded-2xl bg-[#ECFDF5] border border-[#A7F3D0] text-xs text-[#065F46] flex items-center space-x-3 text-left">
           <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-lg shrink-0 shadow-xs">
-            👩‍⚕️
+            🌿
           </div>
           <div>
-            <span className="font-bold">Palabras de Marié:</span>
+            <span className="font-bold">Palabras de Bianka 💚:</span>
             <p className="mt-0.5 italic">
               {isGraduation
-                ? '"Tu compromiso con tu salud digestiva ha transformado tu calidad de vida. Este diploma es testimonio de tu constancia."'
-                : '"Revisa la cantidad restante de tu frasco para asegurar tu continuidad en las semanas más importantes."'}
+                ? '"Tu constancia y dedicación han transformado tu digestión. Este diploma es testimonio de tu amor propio y de tu constancia."'
+                : '"Recuerda revisar cuánto Coli Plus te queda en tu frasco para asegurar tu continuidad en las semanas clave de repoblación."'}
             </p>
           </div>
         </div>
@@ -141,7 +141,7 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
 
             <button
               onClick={() => {
-                marieVoice.stop();
+                biankaVoice.stop();
                 onClose();
               }}
               className="px-4 py-2 rounded-xl text-[#64748B] hover:text-[#0F172A] text-xs font-semibold"

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Volume2, Square, Sparkles, MessageCircle, Bot, User, RefreshCw } from 'lucide-react';
+import { Send, Volume2, Square, Sparkles, MessageCircle, Bot, User, RefreshCw, ShoppingBag } from 'lucide-react';
 import { UserProfile } from '../types';
-import { marieVoice } from '../utils/speechHelper';
+import { biankaVoice } from '../utils/speechHelper';
 
 interface MarieChatProps {
   user: UserProfile;
@@ -10,25 +10,25 @@ interface MarieChatProps {
 
 interface ChatMessage {
   id: string;
-  sender: 'marie' | 'user';
+  sender: 'bianka' | 'user';
   text: string;
   time: string;
 }
 
 const QUICK_QUESTIONS = [
-  '¿A qué hora exacta debo tomar ColiPlus?',
-  'Tengo muchos gases y cólicos hoy, ¿qué me recomiendas?',
-  '¿Puedo mezclar ColiPlus con leche vegetal o avena?',
-  '¿Qué alimentos debo evitar en esta fase?',
-  '¿Cómo interpreto mi tipo en la Escala de Bristol?'
+  '¿A qué hora exacta debo tomar Coli Plus?',
+  'Tengo muchos gases y pesadez hoy, ¿qué me recomiendas?',
+  '¿Puedo mezclar Coli Plus con agua tibia, infusión o batido?',
+  '¿Qué alimentos me conviene evitar en esta fase?',
+  '¿Cómo interpreto mi consistencia en la Escala de Bristol?'
 ];
 
 export const MarieChat: React.FC<MarieChatProps> = ({ user, onOpenStore }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'm-welcome',
-      sender: 'marie',
-      text: `¡Hola ${user.name.split(' ')[0]}! Soy Marié, tu mentora y especialista en salud del colon. Estoy aquí para resolver cualquier duda sobre tus tomas de ColiPlus, qué comer ante una crisis de distensión o cómo optimizar tu digestión. ¿En qué te puedo ayudar hoy?`,
+      sender: 'bianka',
+      text: `¡Hola ${user.name.split(' ')[0]}! Soy Bianka, tu guía de bienestar y hábitos saludables de ColShopi Tienda By Leps Digital 💚. Estoy aquí para acompañarte en tu reto de 30 días, resolver dudas sobre cómo tomar tu Coli Plus, darte ideas de comidas ligeras y ayudarte a desinflamar tu colon día a día. ¿En qué te puedo orientar hoy?`,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ]);
@@ -71,8 +71,8 @@ export const MarieChat: React.FC<MarieChatProps> = ({ user, onOpenStore }) => {
       const data = await res.json();
       const botMsg: ChatMessage = {
         id: `m-${Date.now()}`,
-        sender: 'marie',
-        text: data.reply || 'Recuerda que tomar tu dosis de ColiPlus con 250ml de agua y respirar profundamente antes de comer relaja tu nervio vago.',
+        sender: 'bianka',
+        text: data.reply || 'Recuerda tomar tu cucharada de Coli Plus en un vaso de agua fresca o infusión tibia, y asegurar mínimo 2 litros de agua durante el día para que los mucílagos y la fibra cumplan su función.',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
@@ -80,8 +80,8 @@ export const MarieChat: React.FC<MarieChatProps> = ({ user, onOpenStore }) => {
     } catch (e) {
       const fallbackMsg: ChatMessage = {
         id: `m-${Date.now()}`,
-        sender: 'marie',
-        text: 'Disculpa, hubo una pequeña intermitencia. Recuerda que ante gases y distensión, una infusión tibia de manzanilla con anís y tu dosis nocturna de ColiPlus son la mejor combinación.',
+        sender: 'bianka',
+        text: 'Disculpa, tuve un momento de intermitencia de conexión. Recuerda que ante inflamación o gases, una infusión de manzanilla con anís y tu porción de Coli Plus antes de descansar te darán mucho alivio.',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages(prev => [...prev, fallbackMsg]);
@@ -92,11 +92,11 @@ export const MarieChat: React.FC<MarieChatProps> = ({ user, onOpenStore }) => {
 
   const handleToggleVoice = (msg: ChatMessage) => {
     if (playingAudioId === msg.id) {
-      marieVoice.stop();
+      biankaVoice.stop();
       setPlayingAudioId(null);
     } else {
       setPlayingAudioId(msg.id);
-      marieVoice.speak(
+      biankaVoice.speak(
         msg.text,
         () => setPlayingAudioId(msg.id),
         () => setPlayingAudioId(null),
@@ -113,30 +113,31 @@ export const MarieChat: React.FC<MarieChatProps> = ({ user, onOpenStore }) => {
         <div className="flex items-center space-x-4">
           <div className="relative">
             <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-[#0F766E] to-[#10B981] flex items-center justify-center text-white text-2xl shadow-sm border border-[#D1FAE5]">
-              👩‍⚕️
+              🌿
             </div>
             <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#10B981] border-2 border-white" />
           </div>
           <div>
             <div className="flex items-center space-x-2">
               <h2 className="text-xl font-bold text-[#0F172A] font-display">
-                Marié • Nutricionista Especialista
+                Bianka • Guía de Bienestar ColShopi 💚
               </h2>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0]">
                 En Línea
               </span>
             </div>
             <p className="text-xs text-[#64748B] mt-0.5">
-              Protocolo ColiPlus 30D • Eje Intestino-Cerebro y Microbiota
+              Hábitos Saludables & Cuidado del Colon • ColShopi Tienda By Leps Digital
             </p>
           </div>
         </div>
 
         <button
           onClick={onOpenStore}
-          className="px-4 py-2 rounded-xl bg-[#FAF6F0] hover:bg-[#F5EFE6] border border-[#E2E8F0] text-xs font-bold text-[#92400E] transition-colors"
+          className="px-4 py-2 rounded-xl bg-[#FAF6F0] hover:bg-[#F5EFE6] border border-[#E2E8F0] text-xs font-bold text-[#92400E] transition-colors flex items-center space-x-1.5"
         >
-          Pedir Frascos Adicionales →
+          <ShoppingBag className="w-3.5 h-3.5 text-[#D97706]" />
+          <span>Pedir Más Coli Plus →</span>
         </button>
       </div>
 
@@ -146,33 +147,33 @@ export const MarieChat: React.FC<MarieChatProps> = ({ user, onOpenStore }) => {
         {/* Messages List */}
         <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 bg-[#FAF6F0]/40">
           {messages.map((msg) => {
-            const isMarie = msg.sender === 'marie';
+            const isBianka = msg.sender === 'bianka';
             const isPlayingThis = playingAudioId === msg.id;
 
             return (
               <div
                 key={msg.id}
-                className={`flex items-start space-x-2.5 ${isMarie ? 'justify-start' : 'justify-end'}`}
+                className={`flex items-start space-x-2.5 ${isBianka ? 'justify-start' : 'justify-end'}`}
               >
-                {isMarie && (
+                {isBianka && (
                   <div className="w-8 h-8 rounded-xl bg-[#0F766E] text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                    M
+                    B
                   </div>
                 )}
 
                 <div
                   className={`max-w-[85%] sm:max-w-[75%] rounded-2xl p-4 text-xs leading-relaxed space-y-2 ${
-                    isMarie
+                    isBianka
                       ? 'bg-white border border-[#E2E8F0] text-[#1E293B] shadow-xs'
                       : 'bg-[#0F766E] text-white shadow-xs'
                   }`}
                 >
                   <p className="whitespace-pre-line">{msg.text}</p>
                   
-                  <div className={`flex items-center justify-between pt-1 border-t text-[10px] ${isMarie ? 'border-[#F1F5F9] text-[#94A3B8]' : 'border-emerald-700/50 text-[#D1FAE5]'}`}>
+                  <div className={`flex items-center justify-between pt-1 border-t text-[10px] ${isBianka ? 'border-[#F1F5F9] text-[#94A3B8]' : 'border-emerald-700/50 text-[#D1FAE5]'}`}>
                     <span>{msg.time}</span>
                     
-                    {isMarie && (
+                    {isBianka && (
                       <button
                         onClick={() => handleToggleVoice(msg)}
                         className={`flex items-center space-x-1 px-2 py-0.5 rounded-md font-bold transition-all ${
@@ -197,7 +198,7 @@ export const MarieChat: React.FC<MarieChatProps> = ({ user, onOpenStore }) => {
                   </div>
                 </div>
 
-                {!isMarie && (
+                {!isBianka && (
                   <div className="w-8 h-8 rounded-xl bg-[#334155] text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                     {user.name.slice(0, 1).toUpperCase()}
                   </div>
@@ -211,7 +212,7 @@ export const MarieChat: React.FC<MarieChatProps> = ({ user, onOpenStore }) => {
               <div className="w-2 h-2 rounded-full bg-[#0F766E] animate-bounce" />
               <div className="w-2 h-2 rounded-full bg-[#0F766E] animate-bounce delay-100" />
               <div className="w-2 h-2 rounded-full bg-[#0F766E] animate-bounce delay-200" />
-              <span className="text-[11px] font-medium ml-1">Marié está redactando tu respuesta...</span>
+              <span className="text-[11px] font-medium ml-1">Bianka está redactando tu respuesta...</span>
             </div>
           )}
 
@@ -245,7 +246,7 @@ export const MarieChat: React.FC<MarieChatProps> = ({ user, onOpenStore }) => {
             <input
               type="text"
               disabled={loading}
-              placeholder="Escribe tu consulta a Marié sobre tu digestión o ColiPlus..."
+              placeholder="Pregúntale a Bianka sobre tus hábitos, digestión o Coli Plus..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               className="flex-1 px-4 py-2.5 rounded-xl border border-[#CBD5E1] bg-[#F8FAFC] text-xs focus:ring-2 focus:ring-[#0F766E] focus:outline-hidden"

@@ -54,7 +54,7 @@ export const RecipeBook: React.FC<RecipeBookProps> = ({ initialRecipeId, onClose
             Recetario Antiinflamatorio Digestivo
           </h1>
           <p className="text-xs sm:text-sm text-[#64748B] mt-1 max-w-2xl">
-            12 preparaciones terapéuticas bajas en FODMAPs, libres de irritantes y enriquecidas con la fibra prebiótica de ColiPlus.
+            12 preparaciones terapéuticas bajas en FODMAPs, libres de irritantes y enriquecidas con los superalimentos funcionales de Coli Plus.
           </p>
         </div>
 
@@ -200,12 +200,12 @@ export const RecipeBook: React.FC<RecipeBookProps> = ({ initialRecipeId, onClose
               {/* Body */}
               <div className="p-5 sm:p-6 space-y-6 max-h-[72vh] overflow-y-auto">
                 
-                {/* ColiPlus Banner if used */}
+                {/* Coli Plus Banner if used */}
                 {selectedRecipe.colplusUsage && (
                   <div className="p-3.5 rounded-2xl bg-[#ECFDF5] border border-[#A7F3D0] flex items-center space-x-2.5">
                     <Sparkles className="w-5 h-5 text-[#0F766E] shrink-0" />
                     <div>
-                      <span className="text-xs font-bold text-[#065F46]">Dosis sugerida de ColiPlus:</span>
+                      <span className="text-xs font-bold text-[#065F46]">Dosis sugerida de Coli Plus:</span>
                       <p className="text-xs text-[#047857]">{selectedRecipe.colplusUsage}</p>
                     </div>
                   </div>

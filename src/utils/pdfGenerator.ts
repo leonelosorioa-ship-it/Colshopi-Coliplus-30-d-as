@@ -73,16 +73,16 @@ export function generateDiplomaPDF(userName: string, dateStr?: string) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(11);
   doc.setTextColor(51, 65, 85);
-  const textDesc = 'Por haber completado rigurosamente los 30 días del Protocolo ColiPlus de Transformación Digestiva y Cuidado del Colon, superando las 4 fases de descompresión, regeneración de la mucosa, repoblación de la microbiota y consolidación de hábitos saludables.';
+  const textDesc = 'Por haber completado con dedicación los 30 días del Reto ColiFem 30D: Guía de Transformación Digestiva y Cuidado del Colon, superando las 4 fases de reseteo, restauración de mucosa, repoblación de microbiota y consolidación de hábitos saludables.';
   doc.text(textDesc, pageWidth / 2, 102, { align: 'center', maxWidth: 220 });
 
-  const textDesc2 = 'Demostrando un compromiso inquebrantable con su salud intestinal, alcanzando desinflamación abdominal, evacuaciones regulares según la Escala de Bristol y una vitalidad renovada.';
+  const textDesc2 = 'Demostrando un compromiso amoroso con su bienestar intestinal, alcanzando desinflamación abdominal, evacuaciones regulares según la Escala de Bristol y una vitalidad renovada.';
   doc.text(textDesc2, pageWidth / 2, 115, { align: 'center', maxWidth: 220 });
 
   // Invima & Batch references
   doc.setFontSize(8.5);
   doc.setTextColor(148, 163, 184);
-  doc.text('Programa Avalado con Registro Sanitario INVIMA NSA-0012423-2022 • Fórmula Bio-Activa ColiPlus 450g', pageWidth / 2, 133, { align: 'center' });
+  doc.text('Programa Avalado con Registro Sanitario INVIMA NSA-0012423-2022 • Alimento Funcional Coli Plus 450g', pageWidth / 2, 133, { align: 'center' });
 
   // Date and ID
   doc.setFont('helvetica', 'bold');
@@ -91,7 +91,7 @@ export function generateDiplomaPDF(userName: string, dateStr?: string) {
   doc.text(`Fecha de Graduación: ${actualDate}`, pageWidth / 2, 143, { align: 'center' });
 
   // Signatures
-  // Left: Marie
+  // Left: Bianka
   const sigY = 168;
   doc.setDrawColor(148, 163, 184);
   doc.setLineWidth(0.5);
@@ -100,16 +100,16 @@ export function generateDiplomaPDF(userName: string, dateStr?: string) {
   doc.setFont('times', 'italic');
   doc.setTextColor(15, 118, 110);
   doc.setFontSize(15);
-  doc.text('Marié ColShopi', 80, sigY - 3, { align: 'center' });
+  doc.text('Bianka ColShopi', 80, sigY - 3, { align: 'center' });
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9.5);
   doc.setTextColor(30, 41, 59);
-  doc.text('Nutr. Marié', 80, sigY + 5, { align: 'center' });
+  doc.text('Bianka', 80, sigY + 5, { align: 'center' });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(100, 116, 139);
-  doc.text('Especialista en Microbiota & Eje Intestino-Cerebro', 80, sigY + 9.5, { align: 'center' });
+  doc.text('Guía de Bienestar & Hábitos Saludables', 80, sigY + 9.5, { align: 'center' });
 
   // Center Gold Seal
   doc.setFillColor(245, 158, 11);
@@ -158,7 +158,7 @@ export function generateReportPDF(user: UserProfile) {
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(16);
-  doc.text('INFORME DE TRANSFORMACIÓN DIGESTIVA - COLIPLUS 30D', 15, 12);
+  doc.text('INFORME DE TRANSFORMACIÓN DIGESTIVA - COLIFEM 30D', 15, 12);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9.5);
   doc.setTextColor(209, 250, 229);
@@ -249,7 +249,7 @@ export function generateReportPDF(user: UserProfile) {
   doc.setTextColor(71, 85, 105);
   doc.text('Día', 20, y + 5);
   doc.text('Fecha', 35, y + 5);
-  doc.text('ColiPlus', 65, y + 5);
+  doc.text('Coli Plus', 65, y + 5);
   doc.text('Agua', 90, y + 5);
   doc.text('Distensión', 115, y + 5);
   doc.text('Energía', 145, y + 5);
@@ -290,12 +290,12 @@ export function generateReportPDF(user: UserProfile) {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(109, 40, 217);
-  doc.text('Recomendación Nutricional para Fase de Mantenimiento', 20, y + 8);
+  doc.text('Recomendación de Bienestar para Fase de Mantenimiento', 20, y + 8);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   doc.setTextColor(75, 85, 99);
-  const advice = '1. Continuar con 1 porción diaria o interdiaria de ColiPlus para sostener el aporte de fibra prebiótica (3g/porción).\n2. Mantener la ingesta mínima de 2 litros de agua diarios para evitar el resecamiento del bolo fecal.\n3. Proteger la microbiota evitando harinas refinadas ultraprocesadas y manteniendo la respiración diafragmática.';
+  const advice = '1. Continuar con 1 porción diaria o interdiaria de Coli Plus para sostener el aporte de fibra prebiótica (3g/porción).\n2. Mantener la ingesta mínima de 2 litros de agua diarios para evitar el resecamiento del bolo fecal.\n3. Proteger la microbiota evitando harinas refinadas ultraprocesadas y manteniendo la respiración diafragmática guiada por Bianka.';
   doc.text(advice, 20, y + 15, { maxWidth: pageWidth - 40 });
 
   // Footer
@@ -303,5 +303,5 @@ export function generateReportPDF(user: UserProfile) {
   doc.setTextColor(148, 163, 184);
   doc.text('ColShopi By Leps Digital • Reporte generado electrónicamente • contacto@colshopi.com', pageWidth / 2, 285, { align: 'center' });
 
-  doc.save(`Reporte_ColiPlus_${user.name.replace(/\s+/g, '_')}.pdf`);
+  doc.save(`Reporte_ColiFem_${user.name.replace(/\s+/g, '_')}.pdf`);
 }

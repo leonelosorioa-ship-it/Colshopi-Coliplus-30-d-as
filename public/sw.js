@@ -33,8 +33,8 @@ self.addEventListener('activate', (event) => {
 // Push notification handling
 self.addEventListener('push', (event) => {
   let data = {
-    title: 'ColiPlus 30D - Recordatorio Digestivo',
-    body: 'Es momento de tu dosis de ColiPlus y tu hidratación matutina con Marié.',
+    title: 'ColiFem 30D - Mensaje de Bianka 💚',
+    body: 'Hola hermosa, recuerda tu dosis de Coli Plus y tu hidratación con ColShopi Tienda.',
     icon: '/icon-192.png',
     badge: '/icon-192.png',
     data: { url: '/' }

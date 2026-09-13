@@ -1,23 +1,34 @@
 export type DigestiveAngle =
+  | 'Hinchazón Abdominal y Gases'
+  | 'Hinchazón Abdominal y Gases post-comida'
+  | 'Tránsito Lento y Estreñimiento'
+  | 'Tránsito Lento / Estreñimiento severo'
+  | 'Digestión Pesada e Intolerancias'
+  | 'Disbiosis y Falta de Energía'
+  | 'Detox Intestinal y Falta de Energía'
   | 'Inflamación constante y gases'
   | 'Estreñimiento severo'
-  | 'Digestión pesada e intolerancias'
-  | 'Reflujo y pesadez';
+  | 'Reflujo y pesadez'
+  | string;
 
 export interface CheckInRecord {
   date: string;
-  tookSupplement: boolean;
+  tookSupplement: boolean; // Dosis de Coli Plus
+  waterGlasses?: number; // 0 a 8 vasos de 250ml (= 2L)
   waterLiters: number;
   antiInflammatoryMeal: boolean;
-  bloatingScore: number; // 1 (vientre plano/sin molestia) a 5 (distensión máxima/dolor)
+  bloatingScore: number; // 1 (vientre plano/sin gas) a 5 (distensión máxima/cólico)
   energyScore: number; // 1 (agotada) a 5 (vitalidad plena)
-  digestionType: 'liviana' | 'regular' | 'pesada';
-  bristolType: number; // 1-7
+  digestionType: 'liviana' | 'normal' | 'pesada' | 'inflamada' | 'regular';
+  bristolType: number; // 1-7 Escala de Bristol
+  moodScore?: number; // 1 a 5
+  sleepQuality?: number; // 1 a 5 (calidad descanso nocturno)
   notes?: string;
+  registeredAt?: number;
 }
 
 export interface UserProfile {
-  id: string;
+  id: string; // ej: #518472 o VIP-XXXX
   name: string;
   whatsapp: string;
   email: string;
@@ -27,10 +38,12 @@ export interface UserProfile {
   symptoms: string[];
   currentDay: number;
   completedDays: number[];
+  dayCompletedTimestamps?: Record<number, number>; // Registro de timestamp de finalización por día
   checkIns: Record<number, CheckInRecord>;
   hasPush?: boolean;
   createdAt: string;
   lastActive: string;
+  demoModeUnlocked?: boolean; // Permite omitir la espera de 24h para pruebas
 }
 
 export interface DayTask {
@@ -47,10 +60,13 @@ export interface DayPlan {
   phaseTitle: string;
   phaseSub: string;
   dailyGoal: string;
-  marieQuote: string;
-  marieAudioText: string;
+  biankaQuote?: string;
+  biankaAudioText?: string;
+  marieQuote?: string;
+  marieAudioText?: string;
   tasks: DayTask[];
   digestiveTip: string;
+  coliPlusIntakeGuide: string; // Modo de toma específico para el día
   recommendedRecipeId?: string;
   isMilestone?: boolean;
 }
@@ -81,6 +97,7 @@ export interface ProductPack {
   badge?: string;
   bonusGift: string;
   popular?: boolean;
+  description?: string;
   imageAlt: string;
 }
 
@@ -91,4 +108,5 @@ export interface BristolTypeInfo {
   status: 'Estreñimiento severo' | 'Estreñimiento leve' | 'Ideal y saludable' | 'Tendencia a diarrea' | 'Inflamación o urgencia';
   color: string;
   recommendation: string;
+  visualEmoji?: string;
 }

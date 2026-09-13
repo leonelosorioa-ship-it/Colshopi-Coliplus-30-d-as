@@ -206,17 +206,18 @@ app.post('/api/push/send', async (req, res) => {
     }
   }
 
-  const payload = JSON.stringify({
-    title: title || 'ColiPlus 30D - Mensaje de Marié',
-    body: body || 'Recuerda tu protocolo de bienestar digestivo y tu toma de ColiPlus.',
-    icon: icon || '/icon-192.png',
-    data: { url: url || '/' }
-  });
-
   const results = await Promise.allSettled(
     targetUsers.map(u => {
       if (u.pushSubscription) {
-        return webpush.sendNotification(u.pushSubscription, payload);
+        const userTitle = (title || 'ColiFem 30D - Mensaje de Bianka 💚').replace(/{nombre}/gi, u.name || 'Hermosa');
+        const userBody = (body || 'Recuerda tu dosis de Coli Plus y tu hidratación con ColShopi Tienda 💚').replace(/{nombre}/gi, u.name || 'Hermosa');
+        const personalizedPayload = JSON.stringify({
+          title: userTitle,
+          body: userBody,
+          icon: icon || '/icon-192.png',
+          data: { url: url || '/' }
+        });
+        return webpush.sendNotification(u.pushSubscription, personalizedPayload);
       }
       return Promise.reject('No subscription');
     })
@@ -271,7 +272,7 @@ app.post('/api/users', (req, res) => {
 
   const user: UserRecord = {
     id,
-    name: data.name || 'Usuaria ColiPlus',
+    name: data.name || 'Usuaria ColiFem',
     whatsapp: data.whatsapp || '+57 300 000 0000',
     email: data.email || 'cliente@colshopi.com',
     ageRange: data.ageRange || '25-34',
@@ -325,7 +326,7 @@ app.post('/api/orders', (req, res) => {
     userId: userId || 'GUEST',
     userName: userName || 'Cliente ColShopi',
     whatsapp: whatsapp || '+57 300 000 0000',
-    packName: packName || 'Pack ColiPlus',
+    packName: packName || 'Pack ColiFem',
     quantity: quantity || 1,
     totalCOP: totalCOP || 89000,
     bonusGift: bonusGift || 'Obsequio ColShopi',
@@ -386,22 +387,28 @@ app.post('/api/chat', async (req, res) => {
     try {
       const ai = new GoogleGenAI({ apiKey });
       const systemInstruction = `
-Eres Marié, la mentora y nutricionista especialista en microbiota, salud intestinal y el eje intestino-cerebro del programa "ColiPlus 30D" de la marca ColShopi By Leps Digital.
-El producto ColiPlus es un alimento en polvo de 450g (sabor natural a manzana verde, registro INVIMA NSA-0012423-2022, 34 kcal por porción, 3g de fibra prebiótica soluble e insoluble, sin azúcar añadida) formulado con 8 superalimentos: linaza molida, salvado de trigo, noni, pitaya, flor de jamaica, alcachofa, semillas de chía, espirulina y té verde.
-Modo de uso recomendado:
-- Para regular el tránsito matutino y desinflamar durante la noche: Tomar 1 cucharada dosificadora en un vaso de agua fresca o infusión tibia 30 minutos antes de dormir.
-- Para energía metabólica y control de ansiedad por comer: Tomar en ayunas al levantarse.
-- Se puede mezclar en batidos o avena.
-- Es clave acompañarlo con al menos 2 litros de agua diarios para que la fibra soluble haga su efecto mucilaginoso lubricante.
-Perfil de la usuaria actual:
-Nombre: ${userProfile?.name || 'Amiga'}
-Ángulo digestivo principal: ${userProfile?.digestiveAngle || 'Inflamación y gases'}
+Eres Bianka, la Guía de Bienestar y Hábitos Saludables de ColShopi Tienda By Leps Digital 💚 en la aplicación oficial "ColiFem 30D: Guía de Transformación Digestiva y Cuidado del Colon".
+REGLA INQUEBRANTABLE DE IDENTIDAD:
+NUNCA te presentes como médica ni como nutricionista clínica. Eres una guía de bienestar, hábitos saludables, alimentación consciente y digestión ligera respaldada por el equipo de ColShopi Tienda.
+El producto funcional que acompaña este reto es "Coli Plus" (alimento en polvo de 450g, registro INVIMA NSA-0012423-2022, delicioso sabor natural a manzana verde, 34 kcal por porción, 3g de fibra prebiótica soluble e insoluble, endulzado con stevia natural sin azúcar añadida).
+Su fórmula botánica contiene 8 superalimentos: linaza molida, salvado de trigo, noni, pitaya, flor de jamaica, alcachofa, semillas de chía, espirulina y té verde.
+Modo de toma recomendado de Coli Plus:
+- 1 cucharada dosificadora rasa (aprox. 18g) en un vaso de 250ml de agua fresca o infusión tibia.
+- Momento estelar: 20 a 30 minutos después de cenar antes de dormir (la fibra y mucílagos trabajan mientras duermes, reparan la pared intestinal y facilitan una evacuación suave matutina sin cólicos).
+- Alternativa matutina: En ayunas, si la meta es saciedad prolongada y acelerar digestiones pesadas durante el día.
+- Se puede mezclar en batidos verdes o avena reposada.
+- Siempre recordar beber mínimo 2 litros de agua (8 vasos) diarios para que la fibra mucilaginosa no se reseque.
+- Para dudas sobre envíos, garantías o pedidos adicionales en Colombia, indícales el WhatsApp oficial de atención al cliente de ColShopi Tienda: +57 310 400 7428.
+
+Perfil de la clienta actual:
+Nombre: ${userProfile?.name || 'Amiga ColShopi'}
+Ángulo digestivo: ${userProfile?.digestiveAngle || 'Hinchazón Abdominal y Gases'}
 Día del programa: Día ${userProfile?.currentDay || 1}
 
-Instrucciones:
-1. Responde siempre con tono cálido, empático, profesional y motivador en español neutro/latinoamericano con acento cercano de Colombia ("Hola linda", "Hola hermosa", o "Hola ${userProfile?.name || ''}").
-2. Brinda consejos concretos: tiempos de toma, respiración diafragmática para el nervio vago, combinación de comidas bajas en FODMAPs, alimentos recomendados (calabaza, jengibre, papaya, kéfir) y qué evitar en crisis.
-3. Máximo 2-3 párrafos concisos y un consejo de acción claro.
+Instrucciones de comunicación:
+1. Responde con tono alegre, empático, muy cálido, motivador y profesional en español latinoamericano con acento afectuoso colombiano ("¡Hola hermosa!", "¡Hola ${userProfile?.name || 'linda'}!", con corazoncito verde 💚).
+2. Da tips prácticos: respiración diafragmática, masticación lenta (20 masticadas), infusiones carminativas (manzanilla, jengibre, menta), caldos suaves y verduras cocidas al vapor.
+3. Respuestas concisas, bien estructuradas en 2-3 párrafos breves con pasos accionables.
 `;
 
       const response = await ai.models.generateContent({
@@ -411,35 +418,37 @@ Instrucciones:
         ]
       });
 
-      const reply = response.text || 'Hola querida, recuerda que tomar tu ColiPlus en agua fresca y respirar profundamente antes de comer ayuda a activar tu nervio vago para una digestión perfecta.';
+      const reply = response.text || '¡Hola hermosa! Recuerda tomar tu porción de Coli Plus en agua fresca y hacer 3 respiraciones profundas antes de comer para calmar tu digestión. ¡Estoy contigo en cada paso! 💚';
       return res.json({ reply });
     } catch (geminiError) {
-      console.warn('Gemini API call failed, using clinical digestive knowledgebase fallback:', geminiError);
+      console.warn('Gemini API call failed, using Bianka knowledgebase fallback:', geminiError);
     }
   }
 
-  // Clinical Knowledgebase Fallback for Marié
+  // Knowledgebase Fallback for Bianka 💚
   const lower = message.toLowerCase();
   let reply = '';
 
   if (lower.includes('hora') || lower.includes('momento') || lower.includes('cuándo') || lower.includes('tomar') || lower.includes('dosis')) {
-    reply = `¡Hola querida! Lo ideal es tomar tu porción de ColiPlus (1 cucharada en 250ml de agua) en dos momentos clave según tu objetivo:
-1. **En la noche (30 minutos antes de dormir):** Es ideal si sufres de estreñimiento o pesadez matutina. La linaza, pitaya y chía trabajan mientras duermes y facilitan una evacuación suave y predecible al despertar.
-2. **En ayunas:** Si tu prioridad es activar el metabolismo y calmar la ansiedad por picoteo durante el día. ¡Asegúrate de beber tus 2L de agua durante la jornada!`;
-  } else if (lower.includes('gas') || lower.includes('inflam') || lower.includes('hinch') || lower.includes('dolor')) {
-    reply = `Te entiendo perfectamente, esa distensión puede ser muy incómoda. En este momento te recomiendo:
-1. Preparar una infusión tibia de manzanilla con un toque de jengibre o anís estrellado.
-2. Realizar 5 minutos de respiración diafragmática lenta (inhalar en 4 segundos inflando el abdomen y exhalar en 6 segundos) para calmar el nervio vago.
-3. Evita bebidas carbonatadas, chicles, legumbres mal cocidas o lácteos por hoy. ColiPlus aportará los prebióticos que tu flora necesita para fermentar adecuadamente sin exceso de gas.`;
-  } else if (lower.includes('leche') || lower.includes('jugo') || lower.includes('mezclar')) {
-    reply = `¡Claro que sí! ColiPlus tiene un suave y delicioso sabor a manzana verde natural. Puedes disolverlo perfectamente en agua fresca, en leche vegetal (almendras o coco sin azúcar), o agregarlo a tu batido verde matutino con espinaca y pepino. Solo recuerda tomarlo inmediatamente después de mezclar para disfrutar de su textura ligera.`;
-  } else if (lower.includes('bristol') || lower.includes('evacua') || lower.includes('baño') || lower.includes('diarrea') || lower.includes('estreñ')) {
-    reply = `La escala de Bristol es nuestra mejor brújula digestiva:
-- **Tipos 1 y 2 (bolitas duras o grumos):** Indican tránsito lento y deshidratación de la materia fecal. Necesitas aumentar agua y tu ColiPlus nocturno.
-- **Tipos 3 y 4 (forma de salchicha suave y lisa):** ¡Es el estado ideal y la meta del protocolo ColiPlus!
-- **Tipos 5 a 7 (pastosa o líquida):** Indican irritación o disbiosis rápida. En ese caso prioriza el caldo de verduras, arroz integral y alimentos astringentes mientras tu mucosa se repara en Fase 2.`;
+    reply = `¡Hola hermosa! 💚 Lo ideal es tomar tu porción de Coli Plus (1 cucharada en 250ml de agua fresca) en estos momentos clave según tu objetivo:
+1. **En la noche (20-30 minutos después de cenar antes de dormir):** ¡Es el momento favorito de nuestras clientas! La linaza, pitaya y chía lubrican suavemente tu intestino mientras descansas para que despiertes con una evacuación natural y tu vientre plano.
+2. **En ayunas:** Si tu prioridad es calmar la ansiedad por comer y acelerar una digestión lenta durante el día. ¡Acompáñalo siempre con tus 8 vasos de agua al día!`;
+  } else if (lower.includes('gas') || lower.includes('inflam') || lower.includes('hinch') || lower.includes('dolor') || lower.includes('cólico')) {
+    reply = `¡Te entiendo tanto, hermosa! Esa distensión puede ser agotadora. Aquí tienes mi ritual de rescate inmediato de ColShopi 💚:
+1. Prepárate una infusión tibia de manzanilla con unas rodajas finas de jengibre o anís.
+2. Siéntate cómoda y haz 5 minutos de respiración diafragmática: inhala inflando tu abdomen en 4 segundos y exhala despacio en 6 segundos. Esto envía una señal de calma directa a tu colon.
+3. Evita gaseosas, chicles y ensaladas crudas duras por hoy. Esta noche tu Coli Plus aportará la fibra noble que tu flora necesita para desinflamar.`;
+  } else if (lower.includes('leche') || lower.includes('jugo') || lower.includes('batido') || lower.includes('mezclar')) {
+    reply = `¡Totalmente, hermosa! 💚 Coli Plus tiene un delicioso y suave sabor a manzana verde natural. Puedes disolverlo perfectamente en agua fresca, en leche vegetal sin azúcar (de almendras o coco), o licuarlo en tu batido verde matutino con espinaca y pepino. Solo recuerda beberlo pronto para disfrutar de su textura ligera y fresca.`;
+  } else if (lower.includes('bristol') || lower.includes('evacua') || lower.includes('baño') || lower.includes('estreñ') || lower.includes('diarrea')) {
+    reply = `La Escala de Bristol es nuestra mejor brújula digestiva 💚:
+- **Tipos 1 y 2 (bolitas duras):** Tu colon te pide más lubricación. Sube a 8 vasos de agua y no olvides tu Coli Plus nocturno.
+- **Tipos 3 y 4 (forma de salchicha suave y lisa):** ¡Es la meta dorada de ColiFem 30D! Significa tránsito perfecto y mucosa sana.
+- **Tipos 5 a 7 (muy blandas o líquidas):** Tu colon está irritado; dale un respiro hoy con caldos calientes de verduras, arroz integral y agua tibia mientras tu microbiota se equilibra en Fase 2.`;
+  } else if (lower.includes('whatsapp') || lower.includes('pedido') || lower.includes('comprar') || lower.includes('frasco') || lower.includes('colshopi')) {
+    reply = `¡Con mucho gusto hermosa! 💚 Puedes solicitar tus frascos de Coli Plus o consultar cualquier duda sobre tu despacho directamente con nuestro equipo de atención de ColShopi Tienda en WhatsApp al **+57 310 400 7428**. ¡Hacemos envíos con pago contra entrega en toda Colombia!`;
   } else {
-    reply = `¡Hola! Me alegra mucho que me consultes. Para apoyar tu colon hoy, recuerda que cada porción de ColiPlus te aporta 3 gramos de fibra prebiótica pura con alcachofa, pitaya, flor de jamaica y espirulina. Combínalo siempre con una masticación consciente (al menos 20 masticadas por bocado) para que las enzimas salivares ayuden a tu estómago. ¿Tienes alguna molestia puntual que quieras que revisemos?`;
+    reply = `¡Hola hermosa! Me alegra muchísimo saludarte 💚. Recuerda que cada porción de Coli Plus te brinda 3 gramos de fibra prebiótica pura con 8 superalimentos botánicos (linaza, alcachofa, pitaya, noni, flor de jamaica, chía, espirulina y té verde). Mastica cada bocado al menos 20 veces para facilitar el trabajo de tu estómago. ¿En qué molestia o duda digestiva te puedo acompañar hoy?`;
   }
 
   res.json({ reply });
@@ -462,7 +471,7 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`ColiPlus 30D server running on http://0.0.0.0:${PORT}`);
+    console.log(`ColiFem 30D server running on http://0.0.0.0:${PORT}`);
   });
 }
 

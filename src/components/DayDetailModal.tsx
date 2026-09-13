@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Volume2, Square, CheckCircle, Circle, Sparkles, BookOpen, Utensils, Check } from 'lucide-react';
+import { X, Volume2, Square, CheckCircle, Circle, Sparkles, BookOpen, Utensils, Check, Pill, Droplet } from 'lucide-react';
 import { DayPlan, UserProfile } from '../types';
-import { marieVoice } from '../utils/speechHelper';
+import { biankaVoice } from '../utils/speechHelper';
 
 interface DayDetailModalProps {
   dayPlan: DayPlan | null;
@@ -34,7 +34,7 @@ export const DayDetailModal: React.FC<DayDetailModalProps> = ({
         setCompletedTaskIds([]);
       }
       setIsPlayingAudio(false);
-      marieVoice.stop();
+      biankaVoice.stop();
     }
   }, [dayPlan, user]);
 
@@ -59,11 +59,11 @@ export const DayDetailModal: React.FC<DayDetailModalProps> = ({
 
   const handleToggleAudio = () => {
     if (isPlayingAudio) {
-      marieVoice.stop();
+      biankaVoice.stop();
       setIsPlayingAudio(false);
     } else {
       setIsPlayingAudio(true);
-      marieVoice.speak(
+      biankaVoice.speak(
         dayPlan.marieAudioText,
         () => setIsPlayingAudio(true),
         () => setIsPlayingAudio(false),
@@ -102,7 +102,7 @@ export const DayDetailModal: React.FC<DayDetailModalProps> = ({
 
           <button
             onClick={() => {
-              marieVoice.stop();
+              biankaVoice.stop();
               onClose();
             }}
             className="p-2 rounded-xl text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors"
@@ -114,16 +114,16 @@ export const DayDetailModal: React.FC<DayDetailModalProps> = ({
         {/* Modal Content */}
         <div className="p-5 sm:p-6 space-y-6 max-h-[75vh] overflow-y-auto">
           
-          {/* Marie Voice Audio Coaching Card */}
+          {/* Bianka Voice Audio Coaching Card */}
           <div className="p-4 sm:p-5 rounded-2xl bg-linear-to-r from-[#ECFDF5] to-[#F0FDF4] border border-[#A7F3D0] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center space-x-3">
               <div className="w-11 h-11 rounded-2xl bg-white shadow-xs border border-[#A7F3D0] flex items-center justify-center font-bold text-[#0F766E] text-sm">
-                👩‍⚕️
+                🌿
               </div>
               <div>
                 <div className="flex items-center space-x-2">
                   <h4 className="text-xs font-bold text-[#065F46] uppercase tracking-wider">
-                    Audio-Guía Diaria con Marié
+                    Audio-Guía Diaria con Bianka 💚
                   </h4>
                   {isPlayingAudio && (
                     <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#10B981] text-white animate-pulse">
@@ -132,13 +132,13 @@ export const DayDetailModal: React.FC<DayDetailModalProps> = ({
                   )}
                 </div>
                 <p className="text-xs text-[#047857] mt-0.5">
-                  Escucha el consejo clínico para el objetivo de tu día.
+                  Consejos prácticos de hábitos, bienestar y digestión ligera con ColShopi.
                 </p>
               </div>
             </div>
 
             <button
-              id="btn-play-marie-audio"
+              id="btn-play-bianka-audio"
               onClick={handleToggleAudio}
               className={`px-4 py-2 rounded-xl font-bold text-xs flex items-center space-x-2 transition-all shadow-xs ${
                 isPlayingAudio
@@ -154,22 +154,33 @@ export const DayDetailModal: React.FC<DayDetailModalProps> = ({
               ) : (
                 <>
                   <Volume2 className="w-4 h-4" />
-                  <span>Escuchar a Marié</span>
+                  <span>Escuchar a Bianka 💚</span>
                 </>
               )}
             </button>
           </div>
 
-          {/* Marie Quote Box */}
+          {/* Bianka Quote Box */}
           <div className="bg-[#FAF6F0] p-4 rounded-2xl border-l-4 border-[#0F766E] italic text-xs text-[#334155] leading-relaxed">
             "{dayPlan.marieQuote}"
+          </div>
+
+          {/* Supplement Dosage Guideline */}
+          <div className="p-3.5 rounded-2xl bg-[#F0FDF4] border border-[#BBF7D0] flex items-start space-x-3">
+            <Pill className="w-4 h-4 text-[#0F766E] shrink-0 mt-0.5" />
+            <div className="text-xs">
+              <span className="font-bold text-[#065F46]">Dosis de Coli Plus para hoy:</span>
+              <p className="text-[#047857] mt-0.5 leading-relaxed">
+                1 cucharada dosificadora rasa disuelta en 250ml de agua fresca o infusión tibia (momento ideal: 20-30 min después de cenar o en ayunas). Acompáñalo con mínimo 2 litros de agua durante el día.
+              </p>
+            </div>
           </div>
 
           {/* Checklist of Tasks */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold text-[#475569] uppercase tracking-wider">
-                Tareas Terapéuticas del Día ({completedTaskIds.length}/{dayPlan.tasks.length})
+                Tareas de Bienestar del Día ({completedTaskIds.length}/{dayPlan.tasks.length})
               </h3>
               <span className="text-[11px] text-[#0F766E] font-medium">
                 Marca cada tarea al completarla
@@ -216,7 +227,7 @@ export const DayDetailModal: React.FC<DayDetailModalProps> = ({
             {/* Tip */}
             <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#0F766E]">
-                💡 Tip de la Microbiota
+                💡 Tip de Bianka
               </span>
               <p className="text-xs text-[#475569] leading-snug">
                 {dayPlan.digestiveTip}
@@ -235,12 +246,12 @@ export const DayDetailModal: React.FC<DayDetailModalProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-[#92400E] flex items-center">
                     <Utensils className="w-3 h-3 mr-1" />
-                    Plato Recomendado
+                    Receta Antiinflamatoria
                   </span>
                   <span className="text-[10px] text-[#D97706] font-bold group-hover:underline">Ver Receta →</span>
                 </div>
                 <p className="text-xs text-[#78350F] font-medium leading-snug">
-                  Diseñado para reducir fermentación y nutrir enterocitos hoy.
+                  Diseñado para reducir fermentación y proteger tu colon hoy.
                 </p>
               </div>
             )}

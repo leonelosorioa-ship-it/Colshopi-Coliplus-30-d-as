@@ -68,13 +68,13 @@ export const ExecutiveEnergyChartPanel: React.FC<ExecutiveEnergyChartPanelProps>
         <div>
           <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#ECFDF5] text-[#065F46] mb-2">
             <Activity className="w-3.5 h-3.5 mr-1.5 text-[#059669]" />
-            Panel Clínico de Evolución
+            Panel de Evolución Digestiva
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-[#0F172A] font-display">
             Métricas de Transformación Digestiva
           </h1>
           <p className="text-xs text-[#64748B] mt-1 max-w-xl">
-            Gráficas cuantitativas de reducción de distensión, aumento de vitalidad y estabilidad de la Escala de Bristol.
+            Gráficas de desinflamación, aumento de energía vital y consistencia en la Escala de Bristol.
           </p>
         </div>
 
@@ -98,7 +98,7 @@ export const ExecutiveEnergyChartPanel: React.FC<ExecutiveEnergyChartPanelProps>
 
           {/* Download PDF button */}
           <button
-            id="btn-download-clinical-report"
+            id="btn-download-wellness-report"
             onClick={handleDownloadPdf}
             disabled={isGeneratingPdf}
             className="inline-flex items-center px-4 py-2.5 rounded-xl bg-[#0F766E] text-white font-bold text-xs hover:bg-[#115E59] transition-all shadow-xs"
@@ -216,7 +216,7 @@ export const ExecutiveEnergyChartPanel: React.FC<ExecutiveEnergyChartPanelProps>
               Evolución en Escala de Bristol (Días 1 a {maxDay})
             </h3>
             <p className="text-xs text-[#64748B]">
-              Objetivo clínico: alcanzar y mantener Tipos 3 y 4 de evacuación.
+              Objetivo de bienestar: alcanzar y mantener Tipos 3 y 4 de evacuación.
             </p>
           </div>
 
@@ -248,17 +248,17 @@ export const ExecutiveEnergyChartPanel: React.FC<ExecutiveEnergyChartPanelProps>
 
       </div>
 
-      {/* Advice Box from Marie */}
+      {/* Advice Box from Bianka */}
       <div className="p-6 rounded-3xl bg-[#FAF6F0] border border-[#E2E8F0] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <span className="text-xs font-bold text-[#0F766E] uppercase tracking-wider">
-            Diagnóstico de Progreso con Marié
+            Evaluación de Progreso con Bianka 💚
           </span>
           <h4 className="text-sm font-bold text-[#0F172A]">
             ¡Tu curva de recuperación responde a la perfección!
           </h4>
           <p className="text-xs text-[#475569] max-w-2xl leading-relaxed">
-            La combinación de linaza molida, pitaya y alcachofa ha mantenido la hidratación luminal de tu colon. Si necesitas ajustar algún parámetro de tu dosis diaria, puedes consultarme en el chat.
+            La combinación de linaza, pitaya, alcachofa y probióticos en Coli Plus ayuda a mantener la hidratación luminal de tu colon. Si tienes dudas o requieres tips sobre tus preparaciones, consúltame en el chat.
           </p>
         </div>
 

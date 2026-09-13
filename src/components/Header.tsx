@@ -29,12 +29,12 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Brand & Identity */}
           <div className="flex items-center space-x-3 cursor-pointer" onClick={onOpenProfile}>
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-linear-to-br from-[#0F766E] to-[#10B981] flex items-center justify-center text-white shadow-sm border border-[#D1FAE5]">
-              <div className="text-center font-bold text-lg tracking-wider">CP</div>
+              <div className="text-center font-bold text-lg tracking-wider">CF</div>
             </div>
             <div>
               <div className="flex items-center space-x-2">
                 <span className="text-lg sm:text-xl font-bold tracking-tight text-[#0F172A] font-display">
-                  ColiPlus <span className="text-[#0F766E]">30D</span>
+                  ColiFem <span className="text-[#0F766E]">30D</span>
                 </span>
                 <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A]">
                   <Sparkles className="w-3 h-3 mr-1 text-[#D97706]" />
@@ -84,7 +84,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="inline-flex items-center px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-xl bg-linear-to-r from-[#0F766E] to-[#10B981] text-white shadow-xs hover:opacity-95 transition-all transform active:scale-98"
             >
               <ShoppingBag className="w-4 h-4 mr-1.5" />
-              <span>Pedir ColiPlus</span>
+              <span>Pedir Coli Plus</span>
               <span className="ml-1.5 hidden md:inline-block px-1.5 py-0.2 bg-[#047857] text-[10px] rounded-md font-bold text-[#D1FAE5]">
                 -40% VIP
               </span>

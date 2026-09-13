@@ -3,15 +3,15 @@ import { Recipe } from '../types';
 export const GUT_RECIPES: Recipe[] = [
   {
     id: 'rec-1',
-    title: 'Batido Verde Desinflamante con ColiPlus Manzana',
+    title: 'Batido Verde Desinflamante con Coli Plus Manzana',
     category: 'Batidos & Smoothies',
     prepTime: '5 min',
     servings: '1 vaso (300ml)',
-    colplusUsage: '1 cucharada dosificadora de ColiPlus',
+    colplusUsage: '1 cucharada dosificadora de Coli Plus',
     description: 'Bebida fresca y alcalinizante rica en clorofila y prebióticos activos para reducir la distensión matutina.',
     fodmapStatus: 'Bajo en FODMAPs',
     ingredients: [
-      '1 cucharada de ColiPlus sabor manzana verde',
+      '1 cucharada de Coli Plus sabor manzana verde',
       '1 taza de espinacas tiernas lavadas',
       '1/2 pepino cohombro pelado y sin semillas',
       '1 trozo pequeño de jengibre fresco (1 cm)',
@@ -22,7 +22,7 @@ export const GUT_RECIPES: Recipe[] = [
       'Lava muy bien las hojas de espinaca y el pepino.',
       'Coloca todos los ingredientes frescos en la licuadora con el agua.',
       'Licúa a velocidad alta durante 45 segundos hasta obtener una mezcla homogénea.',
-      'Añade la cucharada de ColiPlus al final y pulsa durante 5 segundos para disolver sin sobrebatir.',
+      'Añade la cucharada de Coli Plus al final y pulsa durante 5 segundos para disolver sin sobrebatir.',
       'Sirve inmediatamente y bebe con calma, masticando cada sorbo para activar enzimas salivares.'
     ],
     gutBenefit: 'Aporte de mucílagos y magnesio que relajan la musculatura lisa del colon y previenen espasmos.'
@@ -175,22 +175,22 @@ export const GUT_RECIPES: Recipe[] = [
   },
   {
     id: 'rec-8',
-    title: 'Smoothie Nocturno Reparador con ColiPlus',
+    title: 'Smoothie Nocturno Reparador con Coli Plus',
     category: 'Batidos & Smoothies',
     prepTime: '5 min',
     servings: '1 vaso (250ml)',
-    colplusUsage: '1 cucharada dosificadora de ColiPlus en la noche',
+    colplusUsage: '1 cucharada dosificadora de Coli Plus en la noche',
     description: 'El ritual de oro nocturno: tomado 30 minutos antes de dormir para trabajar en la noche y garantizar tránsito matutino.',
     fodmapStatus: 'Bajo en FODMAPs',
     ingredients: [
-      '1 cucharada dosificadora de ColiPlus (manzana verde)',
+      '1 cucharada dosificadora de Coli Plus (manzana verde)',
       '1 taza de infusión fría de manzanilla o agua filtrada',
       '1/4 de manzana verde pelada (opcional para textura)',
       '3 cubitos de hielo de agua pura',
       '1 ramita pequeña de hierbabuena fresca'
     ],
     instructions: [
-      'Disuelve la cucharada de ColiPlus en la infusión o agua en un vaso con batidor manual o licuadora durante 10 segundos.',
+      'Disuelve la cucharada de Coli Plus en la infusión o agua en un vaso con batidor manual o licuadora durante 10 segundos.',
       'Agrega el hielo y las hojas de hierbabuena.',
       'Bébelo despacio en un ambiente tranquilo, lejos de pantallas, mientras realizas 3 respiraciones profundas.'
     ],

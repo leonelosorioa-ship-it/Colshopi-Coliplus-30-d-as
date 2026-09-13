@@ -272,7 +272,7 @@ export default function App() {
           <div className="flex items-center space-x-2">
             <Sparkles className="w-4 h-4 text-[#FDE68A] shrink-0" />
             <span>
-              <strong>Instala ColiPlus 30D en tu celular:</strong> accede directo desde tu pantalla de inicio sin depender del navegador.
+              <strong>Instala ColiFem 30D en tu celular:</strong> accede directo desde tu pantalla de inicio sin depender del navegador.
             </span>
           </div>
           <button
@@ -384,7 +384,7 @@ export default function App() {
             { id: 'tracker', label: 'Tracker', icon: Activity },
             { id: 'charts', label: 'Métricas', icon: TrendingUp },
             { id: 'recipes', label: 'Recetas', icon: Utensils },
-            { id: 'chat', label: 'Marié', icon: MessageCircle }
+            { id: 'chat', label: 'Bianka', icon: MessageCircle }
           ].map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -413,11 +413,11 @@ export default function App() {
       <footer className="bg-[#FAF6F0] border-t border-[#E2E8F0] mt-12 py-8 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#64748B]">
           <div className="flex items-center space-x-2">
-            <span className="font-bold text-[#0F172A]">ColiPlus 30D</span>
+            <span className="font-bold text-[#0F172A]">ColiFem 30D</span>
             <span>•</span>
-            <span>Fórmula Nutricional para el Colon (450g)</span>
+            <span>Guía de Transformación Digestiva y Cuidado del Colon</span>
             <span>•</span>
-            <span>ColShopi Colombia</span>
+            <span>ColShopi Tienda By Leps Digital</span>
           </div>
 
           <div className="flex items-center space-x-4">
@@ -428,7 +428,7 @@ export default function App() {
               Consola Admin
             </button>
             <span>•</span>
-            <span>Desarrollado para ColShopi por Leps Digital</span>
+            <span>Acompañamiento funcional exclusivo Coli Plus</span>
           </div>
         </div>
       </footer>

@@ -120,21 +120,21 @@ export const DailyTracker: React.FC<DailyTrackerProps> = ({
       {/* Main Form Blocks */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#E2E8F0] shadow-sm space-y-8">
         
-        {/* Row 1: Habit Checkers (ColiPlus, Water, Clean Meal) */}
+        {/* Row 1: Habit Checkers (ColiFem, Water, Clean Meal) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           
-          {/* ColiPlus Dose */}
+          {/* ColiFem Dose */}
           <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-[#334155] uppercase tracking-wider flex items-center">
                 <Sparkles className="w-3.5 h-3.5 mr-1.5 text-[#0F766E]" />
-                Dosis ColiPlus
+                Dosis Coli Plus
               </span>
               <span className="text-[10px] font-bold text-[#0F766E] bg-[#D1FAE5] px-2 py-0.5 rounded-full">
-                3g Fibra
+                Fibra & Probióticos
               </span>
             </div>
-            <p className="text-xs text-[#64748B]">¿Tomaste tu porción hoy?</p>
+            <p className="text-xs text-[#64748B]">¿Tomaste tu porción hoy (1 cucharada)?</p>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -389,11 +389,11 @@ export const DailyTracker: React.FC<DailyTrackerProps> = ({
             })}
           </div>
 
-          {/* Clinical Advice based on selected Bristol Type */}
+          {/* Wellness Guidance based on selected Bristol Type */}
           <div className="p-4 rounded-2xl bg-[#FAF6F0] border border-[#E2E8F0] space-y-1">
             <div className="flex items-center space-x-2">
               <span className="text-xs font-bold text-[#0F766E]">
-                Consejo Clínico para {selectedBristolInfo.title}:
+                Consejo de Bienestar de Bianka para {selectedBristolInfo.title}:
               </span>
             </div>
             <p className="text-xs text-[#334155] leading-relaxed">

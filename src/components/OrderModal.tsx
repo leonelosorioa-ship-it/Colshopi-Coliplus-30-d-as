@@ -34,7 +34,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({ isOpen, user, onClose })
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user?.id || 'GUEST',
-          userName: customerName.trim() || 'Cliente ColiPlus',
+          userName: customerName.trim() || 'Cliente ColiFem',
           whatsapp: customerPhone.trim() || '+57 300 000 0000',
           packName: selectedPack.title,
           quantity: selectedPack.bottlesCount,
@@ -48,7 +48,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({ isOpen, user, onClose })
 
     // Build structured WhatsApp message
     const message = encodeURIComponent(
-`👋 ¡Hola ColShopi! Quiero ordenar mi reposición de ColiPlus para mi Protocolo 30D.
+`👋 ¡Hola ColShopi Tienda By Leps Digital! Quiero ordenar mi reposición de Coli Plus para mi Reto ColiFem 30D.
 
 📦 *PACK SELECCIONADO:*
 • ${selectedPack.title} (${selectedPack.subtitle})
@@ -61,9 +61,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({ isOpen, user, onClose })
 • WhatsApp: ${customerPhone || (user?.whatsapp || '')}
 • Ciudad: ${shippingCity}
 • Dirección: ${shippingAddress || 'A coordinar por WhatsApp'}
-• ID VIP Protocolo: ${user?.id || 'VIP-COLIPLUS'}
+• Código VIP: ${user?.vipCode || 'VIP-COLIFEM'}
 
-Quedo atenta para coordinar el despacho y método de pago. ¡Muchas gracias!`
+Quedo atenta para coordinar el despacho y método de pago (contraentrega/transferencia). ¡Muchas gracias!`
     );
 
     const whatsappUrl = `https://wa.me/${WHATSAPP_CONTACT_NUMBER.replace(/\+/g, '')}?text=${message}`;
@@ -91,7 +91,7 @@ Quedo atenta para coordinar el despacho y método de pago. ¡Muchas gracias!`
               Tarifa Preferencial para Miembros del Protocolo 30D
             </span>
             <h2 className="text-xl sm:text-2xl font-bold font-display">
-              Reorden & Packs de ColiPlus (450g)
+              Reorden & Packs de Coli Plus (450g)
             </h2>
             <p className="text-xs text-[#D1FAE5]">
               Garantiza la continuidad de tu bienestar digestivo con envío rápido a toda Colombia.

@@ -1,5 +1,5 @@
-// Speech synthesizer for Marie's audio coaching
-class MarieVoiceManager {
+// Speech synthesizer for Bianka's audio coaching
+class BiankaVoiceManager {
   private synth: SpeechSynthesis | null = null;
   private isSpeaking = false;
   private currentUtterance: SpeechSynthesisUtterance | null = null;
@@ -69,4 +69,6 @@ class MarieVoiceManager {
   }
 }
 
-export const marieVoice = new MarieVoiceManager();
+export const biankaVoice = new BiankaVoiceManager();
+export const marieVoice = biankaVoice; // Alias for compatibility
+

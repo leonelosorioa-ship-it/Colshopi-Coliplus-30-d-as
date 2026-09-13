@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShieldCheck, CheckCircle2, ArrowRight, ArrowLeft, Sparkles, HeartPulse, Activity, Stethoscope } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, ArrowRight, ArrowLeft, Sparkles, Activity, HeartHandshake } from 'lucide-react';
 import { DigestiveAngle, UserProfile } from '../types';
+import { isValidVIPCode } from '../data/vipCodes';
 
 interface OnboardingQuizProps {
   onComplete: (profile: UserProfile) => void;
@@ -11,28 +12,28 @@ const AGE_RANGES = ['18-24', '25-34', '35-44', '45-54', '55+'];
 
 const DIGESTIVE_ANGLES: { angle: DigestiveAngle; title: string; desc: string; icon: string }[] = [
   {
-    angle: 'Inflamación constante y gases',
-    title: 'Inflamación Constante y Gases',
-    desc: 'Vientre plano por la mañana que se hincha progresivamente con el paso de las horas y causa presión dolorosa.',
+    angle: 'Hinchazón Abdominal y Gases',
+    title: 'Hinchazón Abdominal y Gases Post-Comida',
+    desc: 'Vientre plano por la mañana que se distiende dolorosamente con el paso de las horas y acumula gases retenidos.',
     icon: '💨'
   },
   {
-    angle: 'Estreñimiento severo',
-    title: 'Estreñimiento y Tránsito Lento',
-    desc: 'Evacuaciones cada 2 o 3 días, heces duras (Bristol 1-2), esfuerzo excesivo y sensación de bloqueo.',
+    angle: 'Tránsito Lento y Estreñimiento',
+    title: 'Tránsito Lento / Estreñimiento Severo',
+    desc: 'Evacuaciones cada 2 o 3 días, heces duras (Bristol 1-2), esfuerzo excesivo y sensación de bloqueo pélvico.',
     icon: '⏳'
   },
   {
-    angle: 'Digestión pesada e intolerancias',
-    title: 'Digestión Pesada e Intolerancias',
-    desc: 'Somnolencia postprandial, pesadez como una piedra en el estómago, intolerancia a grasas y mezclas.',
+    angle: 'Digestión Pesada e Intolerancias',
+    title: 'Digestión Pesada e Intolerancias Frecuentes',
+    desc: 'Sensación de tener una piedra en el estómago tras comer, somnolencia postprandial y digestiones lentas.',
     icon: '🪨'
   },
   {
-    angle: 'Reflujo y pesadez',
-    title: 'Acidez, Reflujo y Malestar Gástrico',
-    desc: 'Sensación de ardor retroesternal, regurgitación o eructos ácidos frecuentes tras las comidas.',
-    icon: '🔥'
+    angle: 'Disbiosis y Falta de Energía',
+    title: 'Detox Intestinal y Falta de Energía',
+    desc: 'Cansancio corporal, niebla mental, microbiota alterada y necesidad de resetear el tracto digestivo.',
+    icon: '🌱'
   }
 ];
 
@@ -43,8 +44,8 @@ const COMMON_SYMPTOMS = [
   'Sensación de evacuación incompleta',
   'Pesadez estomacal durante más de 3 horas',
   'Intolerancia notable a lácteos, fritos o harinas',
-  'Cansancio y niebla mental tras comer',
-  'Dolor sordo en el costado izquierdo del colon'
+  'Cansancio y pesadez tras almorzar',
+  'Dolor o espasmo sordo en el costado del colon'
 ];
 
 export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ onComplete }) => {
@@ -56,7 +57,7 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ onComplete }) =>
   const [email, setEmail] = useState('');
   const [ageRange, setAgeRange] = useState('25-34');
   const [accessCode, setAccessCode] = useState('');
-  const [digestiveAngle, setDigestiveAngle] = useState<DigestiveAngle>('Inflamación constante y gases');
+  const [digestiveAngle, setDigestiveAngle] = useState<DigestiveAngle>('Hinchazón Abdominal y Gases');
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([
     'Vientre inflamado al final de la tarde',
     'Gases retenidos que causan pinchazos o cólicos'
@@ -75,12 +76,11 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ onComplete }) =>
   const handleVerifyCode = () => {
     const cleaned = accessCode.trim().toUpperCase();
     if (!cleaned) {
-      setCodeError('Por favor introduce tu código de 6 caracteres.');
+      setCodeError('Por favor introduce tu código de acceso VIP.');
       return;
     }
-    // Allow demo codes or any 6-character alfanumeric code
-    if (cleaned.length < 4) {
-      setCodeError('El código debe tener al menos 6 caracteres (ej. COLI30 o VIP2026).');
+    if (!isValidVIPCode(cleaned)) {
+      setCodeError('Código no reconocido. Ingresa los 6 dígitos de tu empaque de Coli Plus o usa el código de cortesía COLI30 o 518472.');
       return;
     }
     setCodeError('');
@@ -93,7 +93,7 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ onComplete }) =>
     const generatedId = `VIP-${Math.floor(1000 + Math.random() * 9000)}`;
     const newProfile: UserProfile = {
       id: generatedId,
-      name: name.trim() || 'Usuaria ColiPlus',
+      name: name.trim() || 'Clienta ColShopi',
       whatsapp: whatsapp.trim() || '+57 300 000 0000',
       email: email.trim() || 'cliente@colshopi.com',
       ageRange,
@@ -101,19 +101,8 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ onComplete }) =>
       digestiveAngle,
       symptoms: selectedSymptoms,
       currentDay: 1,
-      completedDays: [1],
-      checkIns: {
-        1: {
-          date: new Date().toISOString().split('T')[0],
-          tookSupplement: false,
-          waterLiters: 1.5,
-          antiInflammatoryMeal: true,
-          bloatingScore: 4,
-          energyScore: 3,
-          digestionType: 'pesada',
-          bristolType: 2
-        }
-      },
+      completedDays: [],
+      checkIns: {},
       createdAt: new Date().toISOString(),
       lastActive: new Date().toISOString()
     };
@@ -131,7 +120,7 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ onComplete }) =>
     setTimeout(() => {
       setIsGenerating(false);
       onComplete(newProfile);
-    }, 1800);
+    }, 1600);
   };
 
   return (
@@ -142,7 +131,9 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ onComplete }) =>
         <div className="bg-[#FAF6F0] p-6 border-b border-[#E2E8F0]">
           <div className="flex items-center justify-between text-xs font-semibold text-[#64748B] mb-2">
             <span>PASO {step} DE 4</span>
-            <span className="text-[#0F766E]">{step === 1 ? 'Datos de Contacto' : step === 2 ? 'Validación de Frasco' : step === 3 ? 'Diagnóstico Digestivo' : 'Personalización'}</span>
+            <span className="text-[#0F766E]">
+              {step === 1 ? 'Datos de Bienvenida' : step === 2 ? 'Validación de Frasco Coli Plus' : step === 3 ? 'Prioridad Digestiva' : 'Síntomas & Personalización'}
+            </span>
           </div>
           <div className="w-full bg-[#E2E8F0] h-2 rounded-full overflow-hidden">
             <div
@@ -166,11 +157,15 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ onComplete }) =>
                 className="space-y-6"
               >
                 <div>
+                  <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#ECFDF5] text-[#047857] border border-[#A7F3D0] mb-2.5">
+                    <HeartHandshake className="w-3.5 h-3.5 text-[#10B981]" />
+                    <span>Obsequio Exclusivo ColShopi Tienda By Leps Digital</span>
+                  </div>
                   <h2 className="text-2xl font-bold text-[#0F172A] font-display">
-                    ¡Bienvenida al Protocolo ColiPlus 30D!
+                    ¡Bienvenida a ColiFem 30D!
                   </h2>
-                  <p className="text-sm text-[#64748B] mt-1">
-                    Comencemos por tus datos para personalizar tu acompañamiento con Marié y tu historial clínico.
+                  <p className="text-sm text-[#64748B] mt-1 leading-relaxed">
+                    Personalicemos tu experiencia con Bianka (Guía de Bienestar & Hábitos Saludables) para acompañar tu toma del suplemento <span className="font-semibold text-[#0F766E]">Coli Plus</span>.
                   </p>
                 </div>
 
@@ -271,48 +266,55 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ onComplete }) =>
                 <div>
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#D1FAE5] text-[#065F46] mb-2">
                     <ShieldCheck className="w-3.5 h-3.5 mr-1 text-[#059669]" />
-                    Acceso Exclusivo Compradores ColiPlus
+                    Acceso Exclusivo Clientas Coli Plus
                   </span>
                   <h2 className="text-2xl font-bold text-[#0F172A] font-display">
                     Código de Validación de tu Frasco
                   </h2>
                   <p className="text-sm text-[#64748B] mt-1">
-                    Ingresa el código alfanumérico de 6 dígitos que vino en el empaque o remisión de ColShopi.
+                    Ingresa el código VIP de 6 dígitos que acompaña tu frasco de Coli Plus (o tu remisión de compra de ColShopi).
                   </p>
                 </div>
 
-                <div className="bg-[#FAF6F0] p-4 rounded-2xl border border-[#E2E8F0] text-xs text-[#475569] space-y-1">
-                  <p className="font-semibold text-[#0F172A]">¿Estás probando la plataforma?</p>
+                <div className="bg-[#FAF6F0] p-4 rounded-2xl border border-[#E2E8F0] text-xs text-[#475569] space-y-2">
+                  <p className="font-semibold text-[#0F172A]">Códigos de Acceso Rápido y Prueba:</p>
                   <p>
-                    Puedes usar el código de cortesía de activación rápida haciendo clic abajo:
+                    Si adquiriste tu frasco recientemente o estás evaluando la PWA, puedes tocar uno de estos códigos verificados:
                   </p>
                   <div className="flex flex-wrap gap-2 pt-1">
                     <button
                       type="button"
-                      onClick={() => { setAccessCode('COLI30'); setCodeError(''); }}
-                      className="px-2.5 py-1 bg-white border border-[#CBD5E1] rounded-md font-mono font-bold text-[#0F766E] hover:bg-[#ECFDF5]"
+                      onClick={() => { setAccessCode('518472'); setCodeError(''); }}
+                      className="px-2.5 py-1.5 bg-white border border-[#CBD5E1] rounded-lg font-mono font-bold text-[#0F766E] hover:bg-[#ECFDF5]"
                     >
-                      COLI30 (Demo 30 Días)
+                      518472 (Código Frasco VIP)
                     </button>
                     <button
                       type="button"
-                      onClick={() => { setAccessCode('VIP2026'); setCodeError(''); }}
-                      className="px-2.5 py-1 bg-white border border-[#CBD5E1] rounded-md font-mono font-bold text-[#D97706] hover:bg-[#FFFBEB]"
+                      onClick={() => { setAccessCode('COLI30'); setCodeError(''); }}
+                      className="px-2.5 py-1.5 bg-white border border-[#CBD5E1] rounded-lg font-mono font-bold text-[#047857] hover:bg-[#ECFDF5]"
                     >
-                      VIP2026 (Acceso Premium)
+                      COLI30 (Demo 30D)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setAccessCode('VIP777'); setCodeError(''); }}
+                      className="px-2.5 py-1.5 bg-white border border-[#CBD5E1] rounded-lg font-mono font-bold text-[#D97706] hover:bg-[#FFFBEB]"
+                    >
+                      VIP777 (VIP Especial)
                     </button>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-[#334155] uppercase tracking-wider mb-1.5">
-                    Código de Activación (6 Caracteres)
+                    Código de Activación VIP
                   </label>
                   <input
                     id="input-access-code"
                     type="text"
                     maxLength={10}
-                    placeholder="Ej. COLI30 o CP-8921"
+                    placeholder="Ej. 518472 o COLI30"
                     value={accessCode}
                     onChange={(e) => { setAccessCode(e.target.value); setCodeError(''); }}
                     className="w-full px-4 py-3 rounded-xl border border-[#CBD5E1] focus:ring-2 focus:ring-[#0F766E] text-base font-mono uppercase tracking-widest bg-[#F8FAFC]"
@@ -352,10 +354,10 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ onComplete }) =>
               >
                 <div>
                   <h2 className="text-2xl font-bold text-[#0F172A] font-display">
-                    ¿Cuál es tu principal motivo de consulta?
+                    ¿Cuál es tu principal motivo de atención?
                   </h2>
                   <p className="text-sm text-[#64748B] mt-1">
-                    Esto calibrará las recomendaciones diarias de Marié y las dosis horarias de ColiPlus.
+                    Esto calibrará los consejos de bienestar diarios de Bianka y el horario óptimo de tu dosis de Coli Plus.
                   </p>
                 </div>
 
@@ -422,7 +424,7 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ onComplete }) =>
                     Selecciona los síntomas que experimentas
                   </h2>
                   <p className="text-sm text-[#64748B] mt-1">
-                    Marca todo lo que hayas sentido en las últimas semanas para medir tu evolución en el tracker.
+                    Marca todo lo que hayas sentido recientemente para medir tu curva de alivio y evolución digestiva.
                   </p>
                 </div>
 
@@ -450,7 +452,7 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ onComplete }) =>
                 <div className="p-4 rounded-2xl bg-[#ECFDF5] border border-[#A7F3D0] flex items-center space-x-3">
                   <Sparkles className="w-6 h-6 text-[#0F766E] shrink-0" />
                   <p className="text-xs text-[#065F46] font-medium leading-relaxed">
-                    Al hacer clic en finalizar, generaremos tu plan personalizado de 30 días dividido en 4 fases clínicas con Marié.
+                    Al finalizar, activaremos tu guía de 30 días en 4 fases con Bianka y tu registro diario de hidratación y bienestar.
                   </p>
                 </div>
 
@@ -472,11 +474,11 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ onComplete }) =>
                     {isGenerating ? (
                       <>
                         <Activity className="w-4 h-4 mr-2 animate-spin" />
-                        <span>Construyendo Protocolo...</span>
+                        <span>Construyendo Tu Guía...</span>
                       </>
                     ) : (
                       <>
-                        <Stethoscope className="w-4 h-4 mr-2" />
+                        <Sparkles className="w-4 h-4 mr-2" />
                         <span>Comenzar Mi Transformación</span>
                       </>
                     )}
