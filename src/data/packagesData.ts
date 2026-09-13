@@ -55,4 +55,4 @@ export const COLIPLUS_PACKS: ProductPack[] = [
   }
 ];
 
-export const WHATSAPP_CONTACT_NUMBER = '+573105550199'; // Official ColShopi customer care
+export const WHATSAPP_CONTACT_NUMBER = '+573104007428'; // Official ColShopi customer care with Bianka

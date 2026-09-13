@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Volume2, Square, Sparkles, MessageCircle, Bot, User, RefreshCw, ShoppingBag } from 'lucide-react';
 import { UserProfile } from '../types';
 import { biankaVoice } from '../utils/speechHelper';
+import { BiankaAvatar } from './BiankaAvatar';
 
 interface MarieChatProps {
   user: UserProfile;
@@ -111,12 +112,7 @@ export const MarieChat: React.FC<MarieChatProps> = ({ user, onOpenStore }) => {
       {/* Mentor Header Card */}
       <div className="bg-white rounded-3xl p-6 border border-[#E2E8F0] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center space-x-4">
-          <div className="relative">
-            <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-[#0F766E] to-[#10B981] flex items-center justify-center text-white text-2xl shadow-sm border border-[#D1FAE5]">
-              🌿
-            </div>
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#10B981] border-2 border-white" />
-          </div>
+          <BiankaAvatar size={60} showBadge className="shrink-0" />
           <div>
             <div className="flex items-center space-x-2">
               <h2 className="text-xl font-bold text-[#0F172A] font-display">
@@ -156,9 +152,7 @@ export const MarieChat: React.FC<MarieChatProps> = ({ user, onOpenStore }) => {
                 className={`flex items-start space-x-2.5 ${isBianka ? 'justify-start' : 'justify-end'}`}
               >
                 {isBianka && (
-                  <div className="w-8 h-8 rounded-xl bg-[#0F766E] text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                    B
-                  </div>
+                  <BiankaAvatar size={34} className="shrink-0 mt-0.5" />
                 )}
 
                 <div
@@ -267,3 +261,5 @@ export const MarieChat: React.FC<MarieChatProps> = ({ user, onOpenStore }) => {
     </div>
   );
 };
+
+export const BiankaChat = MarieChat;

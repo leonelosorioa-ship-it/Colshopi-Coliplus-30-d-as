@@ -262,8 +262,11 @@ export default function App() {
         }}
         onOpenStore={() => setIsOrderModalOpen(true)}
         onOpenAdmin={() => setIsAdminOpen(true)}
+        onOpenMilestone={() => setMilestoneModal({ isOpen: true, day: user?.currentDay || 15 })}
         onTogglePush={handleTogglePush}
         isPushActive={isPushActive}
+        canInstallPWA={!!pwaInstallPrompt}
+        onInstallPWA={handleInstallPWA}
       />
 
       {/* PWA Install Notification Bar */}
@@ -287,8 +290,12 @@ export default function App() {
       {/* Main View Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
         {!user ? (
-          /* ONBOARDING & VALIDATION FLOW */
-          <OnboardingQuiz onComplete={handleOnboardingComplete} />
+          /* ONBOARDING & VALIDATION FLOW - Matching Portada TY Home Screen */
+          <OnboardingQuiz
+            onComplete={handleOnboardingComplete}
+            onOpenAdmin={() => setIsAdminOpen(true)}
+            onInstallPWA={handleInstallPWA}
+          />
         ) : (
           /* PROTOCOL APPLICATION INTERFACE */
           <div className="space-y-6">

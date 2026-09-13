@@ -1,14 +1,41 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShieldCheck, CheckCircle2, ArrowRight, ArrowLeft, Sparkles, Activity, HeartHandshake } from 'lucide-react';
+import {
+  ShieldCheck,
+  CheckCircle2,
+  ArrowRight,
+  ArrowLeft,
+  Sparkles,
+  Activity,
+  Download,
+  Info,
+  Lock,
+  MessageCircle,
+  ExternalLink
+} from 'lucide-react';
 import { DigestiveAngle, UserProfile } from '../types';
-import { isValidVIPCode } from '../data/vipCodes';
+import {
+  isValidVIPCode,
+  getWhatsAppCodeRequestUrl,
+  WHATSAPP_DISPLAY_NUMBER
+} from '../data/vipCodes';
+import { BiankaAvatar } from './BiankaAvatar';
+import { ColShopiLogo } from './ColShopiLogo';
+import { SixDigitInput } from './SixDigitInput';
 
 interface OnboardingQuizProps {
   onComplete: (profile: UserProfile) => void;
+  onOpenAdmin?: () => void;
+  onInstallPWA?: () => void;
 }
 
-const AGE_RANGES = ['18-24', '25-34', '35-44', '45-54', '55+'];
+const AGE_RANGES = [
+  '18 - 24 años',
+  '25 - 34 años',
+  '35 - 44 años',
+  '45 - 54 años',
+  '55+ años'
+];
 
 const DIGESTIVE_ANGLES: { angle: DigestiveAngle; title: string; desc: string; icon: string }[] = [
   {
@@ -44,18 +71,22 @@ const COMMON_SYMPTOMS = [
   'Sensación de evacuación incompleta',
   'Pesadez estomacal durante más de 3 horas',
   'Intolerancia notable a lácteos, fritos o harinas',
-  'Cansancio y pesadez tras almorzar',
+  'Cansancio y somnolencia tras almorzar',
   'Dolor o espasmo sordo en el costado del colon'
 ];
 
-export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ onComplete }) => {
+export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({
+  onComplete,
+  onOpenAdmin,
+  onInstallPWA
+}) => {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
 
   // Form State
   const [name, setName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [email, setEmail] = useState('');
-  const [ageRange, setAgeRange] = useState('25-34');
+  const [ageRange, setAgeRange] = useState('35 - 44 años');
   const [accessCode, setAccessCode] = useState('');
   const [digestiveAngle, setDigestiveAngle] = useState<DigestiveAngle>('Hinchazón Abdominal y Gases');
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([
@@ -63,6 +94,7 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ onComplete }) =>
     'Gases retenidos que causan pinchazos o cólicos'
   ]);
   const [codeError, setCodeError] = useState('');
+  const [generalError, setGeneralError] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
   const toggleSymptom = (symptom: string) => {
@@ -73,20 +105,42 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ onComplete }) =>
     }
   };
 
-  const handleVerifyCode = () => {
-    const cleaned = accessCode.trim().toUpperCase();
-    if (!cleaned) {
-      setCodeError('Por favor introduce tu código de acceso VIP.');
-      return;
-    }
-    if (!isValidVIPCode(cleaned)) {
-      setCodeError('Código no reconocido. Ingresa los 6 dígitos de tu empaque de Coli Plus o usa el código de cortesía COLI30 o 518472.');
-      return;
-    }
+  // Step 1: Validate 6-digit Code & Contact Details
+  const handleValidateStep1 = () => {
+    setGeneralError('');
     setCodeError('');
-    setStep(3);
+
+    if (!name.trim()) {
+      setGeneralError('Por favor ingresa tu nombre completo.');
+      return;
+    }
+    if (!whatsapp.trim()) {
+      setGeneralError('Por favor ingresa tu número de WhatsApp de pedido.');
+      return;
+    }
+
+    const cleanedCode = accessCode.trim().toUpperCase();
+    if (!cleanedCode) {
+      setCodeError('Por favor ingresa tu código VIP de 6 dígitos.');
+      return;
+    }
+
+    if (cleanedCode.length < 6) {
+      setCodeError(`El código debe contener exactamente 6 dígitos (llevas ${cleanedCode.length}/6).`);
+      return;
+    }
+
+    if (!isValidVIPCode(cleanedCode)) {
+      setCodeError('Código no válido. Verifica los 6 dígitos entregados por ColShopi o solicita tu código a Bianka por WhatsApp.');
+      return;
+    }
+
+    // Advance to Step 2: Digestive Priority
+    setStep(2);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Step 4: Finalize Onboarding & Initialize Profile
   const handleFinish = async () => {
     setIsGenerating(true);
 
@@ -94,10 +148,10 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ onComplete }) =>
     const newProfile: UserProfile = {
       id: generatedId,
       name: name.trim() || 'Clienta ColShopi',
-      whatsapp: whatsapp.trim() || '+57 300 000 0000',
+      whatsapp: whatsapp.trim() || '+57 310 400 7428',
       email: email.trim() || 'cliente@colshopi.com',
       ageRange,
-      accessCode: accessCode.toUpperCase() || 'COLI30',
+      accessCode: accessCode.trim().toUpperCase() || 'COLI30',
       digestiveAngle,
       symptoms: selectedSymptoms,
       currentDay: 1,
@@ -114,254 +168,302 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ onComplete }) =>
         body: JSON.stringify(newProfile)
       });
     } catch (e) {
-      console.warn('Backend sync fallback, saving locally:', e);
+      console.warn('Backend sync fallback, continuing locally:', e);
     }
 
     setTimeout(() => {
       setIsGenerating(false);
       onComplete(newProfile);
-    }, 1600);
+    }, 1400);
   };
 
+  const whatsappCodeUrl = getWhatsAppCodeRequestUrl(name, whatsapp);
+
   return (
-    <div className="min-h-[85vh] flex items-center justify-center p-4 sm:p-6">
-      <div className="w-full max-w-2xl bg-white rounded-3xl shadow-xl border border-[#E2E8F0] overflow-hidden">
+    <div className="w-full max-w-xl mx-auto py-2 sm:py-6 px-1 sm:px-0">
+      
+      {/* Outer Card */}
+      <div className="w-full bg-white rounded-3xl shadow-2xl border border-[#E2E8F0] overflow-hidden">
         
-        {/* Top Progress Bar */}
-        <div className="bg-[#FAF6F0] p-6 border-b border-[#E2E8F0]">
-          <div className="flex items-center justify-between text-xs font-semibold text-[#64748B] mb-2">
-            <span>PASO {step} DE 4</span>
-            <span className="text-[#0F766E]">
-              {step === 1 ? 'Datos de Bienvenida' : step === 2 ? 'Validación de Frasco Coli Plus' : step === 3 ? 'Prioridad Digestiva' : 'Síntomas & Personalización'}
-            </span>
+        {/* CARD DARK HEADER - Exactly matching Portada TY */}
+        <div className="bg-[#0D1926] text-white px-5 py-4 sm:px-6 sm:py-5 flex items-center justify-between border-b border-[#1E293B]">
+          <div className="flex items-center space-x-2.5">
+            <ColShopiLogo size={32} className="shrink-0" />
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="text-[10px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded-full bg-[#0F766E]/60 text-[#5EEAD4] border border-[#14B8A6]/40">
+                  Acceso Exclusivo Compradoras
+                </span>
+              </div>
+              <h1 className="text-sm sm:text-base font-extrabold text-white tracking-tight mt-0.5">
+                ColiFem 30D • Activación de Protocolo
+              </h1>
+            </div>
           </div>
-          <div className="w-full bg-[#E2E8F0] h-2 rounded-full overflow-hidden">
-            <div
-              className="bg-linear-to-r from-[#0F766E] to-[#10B981] h-full transition-all duration-500"
-              style={{ width: `${(step / 4) * 100}%` }}
-            />
+
+          <div className="flex items-center space-x-2.5">
+            {onInstallPWA && (
+              <button
+                type="button"
+                onClick={onInstallPWA}
+                className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-lg bg-[#1E293B] hover:bg-[#334155] text-white text-[11px] font-semibold border border-[#475569]/40 transition-colors"
+              >
+                <Download className="w-3 h-3 mr-1 text-[#38BDF8]" />
+                Instalar App
+              </button>
+            )}
+            <div className="text-[11px] font-mono font-bold text-[#38BDF8] bg-[#0F172A] px-2.5 py-1 rounded-lg border border-[#1E293B] shadow-inner">
+              Paso {step} de 4
+            </div>
           </div>
         </div>
 
-        {/* Form Body */}
-        <div className="p-6 sm:p-8">
+        {/* CARD BODY CONTENT */}
+        <div className="p-5 sm:p-7">
           <AnimatePresence mode="wait">
             
-            {/* STEP 1 */}
+            {/* ================= STEP 1: PORTADA TY EXACT FORM ================= */}
             {step === 1 && (
               <motion.div
                 key="step1"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-5"
               >
-                <div>
-                  <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#ECFDF5] text-[#047857] border border-[#A7F3D0] mb-2.5">
-                    <HeartHandshake className="w-3.5 h-3.5 text-[#10B981]" />
-                    <span>Obsequio Exclusivo ColShopi Tienda By Leps Digital</span>
+                {/* WELCOME BANNER WITH BIANKA */}
+                <div className="bg-[#0F172A] rounded-2xl p-4 sm:p-5 text-white border border-[#1E293B] shadow-lg">
+                  <div className="flex items-start space-x-3.5 sm:space-x-4">
+                    <BiankaAvatar size={70} showBadge className="shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <h2 className="text-sm sm:text-base font-bold text-white flex items-center flex-wrap gap-1">
+                        <span>¡Bienvenida a ColShopi Tienda! Soy Bianka</span>
+                        <span>💚</span>
+                      </h2>
+                      <p className="text-xs text-[#94A3B8] leading-relaxed mt-1">
+                        Soy tu Asistente Virtual y Guía de Bienestar. ColShopi es la única Tienda Online Naturista con una App Exclusiva para acompañar tu reto de hábitos con <strong className="text-[#38BDF8]">Coli Plus</strong>. Para activar tu acceso de 30 días, ingresa tu código VIP de 6 dígitos.
+                      </p>
+                    </div>
                   </div>
-                  <h2 className="text-2xl font-bold text-[#0F172A] font-display">
-                    ¡Bienvenida a ColiFem 30D!
-                  </h2>
-                  <p className="text-sm text-[#64748B] mt-1 leading-relaxed">
-                    Personalicemos tu experiencia con Bianka (Guía de Bienestar & Hábitos Saludables) para acompañar tu toma del suplemento <span className="font-semibold text-[#0F766E]">Coli Plus</span>.
-                  </p>
+
+                  {/* Banner Bottom Action: Request Code */}
+                  <div className="mt-4 pt-3.5 border-t border-[#1E293B] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+                    <div className="flex items-center text-xs text-[#CBD5E1] font-medium">
+                      <Lock className="w-3.5 h-3.5 text-[#F59E0B] mr-1.5 shrink-0" />
+                      <span>¿Aún no tienes tu código de 6 dígitos?</span>
+                    </div>
+
+                    <a
+                      id="btn-request-code-whatsapp"
+                      href={whatsappCodeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center px-3.5 py-2 rounded-xl bg-[#10B981] hover:bg-[#059669] text-white text-xs font-bold transition-all shadow-md active:scale-98"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+                      <span>Solicitar mi Código de acceso a Bianka</span>
+                    </a>
+                  </div>
                 </div>
 
+                {/* GENERAL ERROR BANNER */}
+                {generalError && (
+                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-medium rounded-xl flex items-center">
+                    <span className="w-2 h-2 rounded-full bg-red-500 mr-2 shrink-0" />
+                    <span>{generalError}</span>
+                  </div>
+                )}
+
+                {/* FORM FIELDS */}
                 <div className="space-y-4">
+                  {/* Field 1: TU NOMBRE COMPLETO * */}
                   <div>
-                    <label className="block text-xs font-bold text-[#334155] uppercase tracking-wider mb-1.5">
-                      Nombre Completo *
+                    <label className="block text-[11px] sm:text-xs font-bold text-[#334155] uppercase tracking-wider mb-1.5">
+                      TU NOMBRE COMPLETO *
                     </label>
                     <input
-                      id="input-user-name"
+                      id="input-user-fullname"
                       type="text"
                       required
-                      placeholder="Ej. Carolina Montoya"
+                      placeholder="Ej: Claudia Patricia Martínez"
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-[#CBD5E1] focus:ring-2 focus:ring-[#0F766E] focus:outline-hidden text-sm bg-[#F8FAFC]"
+                      onChange={(e) => {
+                        setName(e.target.value);
+                        if (generalError) setGeneralError('');
+                      }}
+                      className="w-full px-4 py-3 rounded-xl border border-[#CBD5E1] focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] focus:outline-hidden text-sm text-[#0F172A] bg-white placeholder-[#94A3B8]"
                     />
                   </div>
 
+                  {/* Field 2 & 3: WHATSAPP DE TU PEDIDO * & RANGO DE EDAD */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-[#334155] uppercase tracking-wider mb-1.5">
-                        WhatsApp (Colombia) *
+                      <label className="block text-[11px] sm:text-xs font-bold text-[#334155] uppercase tracking-wider mb-1.5">
+                        WHATSAPP DE TU PEDIDO *
                       </label>
                       <input
-                        id="input-user-whatsapp"
+                        id="input-user-whatsapp-phone"
                         type="tel"
                         required
-                        placeholder="+57 312 456 7890"
+                        placeholder="Ej: 310 400 7428"
                         value={whatsapp}
-                        onChange={(e) => setWhatsapp(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border border-[#CBD5E1] focus:ring-2 focus:ring-[#0F766E] focus:outline-hidden text-sm bg-[#F8FAFC]"
+                        onChange={(e) => {
+                          setWhatsapp(e.target.value);
+                          if (generalError) setGeneralError('');
+                        }}
+                        className="w-full px-4 py-3 rounded-xl border border-[#CBD5E1] focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] focus:outline-hidden text-sm text-[#0F172A] bg-white placeholder-[#94A3B8]"
                       />
+                      <p className="text-[11px] text-[#64748B] mt-1">
+                        Número con el que solicitaste tu Coli Plus
+                      </p>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-[#334155] uppercase tracking-wider mb-1.5">
-                        Correo Electrónico *
+                      <label className="block text-[11px] sm:text-xs font-bold text-[#334155] uppercase tracking-wider mb-1.5">
+                        RANGO DE EDAD
                       </label>
-                      <input
-                        id="input-user-email"
-                        type="email"
-                        required
-                        placeholder="tu@correo.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border border-[#CBD5E1] focus:ring-2 focus:ring-[#0F766E] focus:outline-hidden text-sm bg-[#F8FAFC]"
-                      />
+                      <select
+                        id="select-user-age-range"
+                        value={ageRange}
+                        onChange={(e) => setAgeRange(e.target.value)}
+                        className="w-full px-3.5 py-3 rounded-xl border border-[#CBD5E1] focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] focus:outline-hidden text-sm text-[#0F172A] bg-white"
+                      >
+                        {AGE_RANGES.map((r) => (
+                          <option key={r} value={r}>
+                            {r}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
+                  {/* Field 4: TU CORREO ELECTRÓNICO PRINCIPAL * */}
                   <div>
-                    <label className="block text-xs font-bold text-[#334155] uppercase tracking-wider mb-1.5">
-                      Rango de Edad
+                    <label className="block text-[11px] sm:text-xs font-bold text-[#334155] uppercase tracking-wider mb-1.5">
+                      TU CORREO ELECTRÓNICO PRINCIPAL *
                     </label>
-                    <div className="grid grid-cols-5 gap-2">
-                      {AGE_RANGES.map((r) => (
-                        <button
-                          key={r}
-                          type="button"
-                          onClick={() => setAgeRange(r)}
-                          className={`py-2 text-xs font-semibold rounded-xl border transition-all ${
-                            ageRange === r
-                              ? 'bg-[#0F766E] text-white border-[#0F766E]'
-                              : 'bg-[#F8FAFC] text-[#475569] border-[#E2E8F0] hover:bg-[#F1F5F9]'
-                          }`}
-                        >
-                          {r}
-                        </button>
-                      ))}
+                    <input
+                      id="input-user-email-address"
+                      type="email"
+                      required
+                      placeholder="ejemplo@correo.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-[#CBD5E1] focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] focus:outline-hidden text-sm text-[#0F172A] bg-white placeholder-[#94A3B8]"
+                    />
+
+                    {/* Email Explanation Callout Box */}
+                    <div className="mt-2.5 p-3.5 rounded-xl bg-[#F0F9FF] border border-[#BAE6FD] text-[#0369A1] text-xs">
+                      <div className="flex items-center space-x-1.5 font-bold text-[#0284C7] mb-1">
+                        <Info className="w-3.5 h-3.5 text-[#0284C7] shrink-0" />
+                        <span>¿Por qué te solicitamos tu correo?</span>
+                      </div>
+                      <p className="text-[11px] leading-relaxed text-[#075985]">
+                        Al finalizar tus 30 días con Coli Plus, Bianka generará tu <strong className="font-semibold text-[#0369A1]">"Bitácora de Bienestar y Hábitos ColiFem 30D"</strong>, un resumen elaborado como guía de hábitos saludables (no médico) con el balance de tu constancia, hidratación, bienestar diario y pautas de continuidad.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Field 5: CÓDIGO DE ACTIVACIÓN ÚNICO (6 DÍGITOS NUMÉRICOS) * */}
+                  <div className="pt-1">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-[11px] sm:text-xs font-bold text-[#334155] uppercase tracking-wider">
+                        CÓDIGO DE ACTIVACIÓN ÚNICO (6 DÍGITOS NUMÉRICOS) *
+                      </label>
+                      <span className={`text-xs font-mono font-bold ${accessCode.length === 6 ? 'text-[#0F766E]' : 'text-[#64748B]'}`}>
+                        {accessCode.length}/6
+                      </span>
+                    </div>
+
+                    {/* Interactive 6-Digit PIN input */}
+                    <SixDigitInput
+                      value={accessCode}
+                      onChange={(val) => {
+                        setAccessCode(val);
+                        if (codeError) setCodeError('');
+                      }}
+                      error={codeError}
+                      onEnterPress={handleValidateStep1}
+                    />
+
+                    {/* Footnote under code input */}
+                    <div className="mt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between text-[11px] text-[#64748B] gap-1">
+                      <div className="flex items-center text-[#64748B]">
+                        <Lock className="w-3 h-3 mr-1 text-[#94A3B8]" />
+                        <span>Asignado manualmente por ColShopi a cada compradora.</span>
+                      </div>
+                      <a
+                        href={whatsappCodeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#0F766E] hover:underline font-bold inline-flex items-center"
+                      >
+                        <span>Pedir mi código por WhatsApp</span>
+                        <ArrowRight className="w-3 h-3 ml-1" />
+                      </a>
+                    </div>
+
+                    {/* Fast Test / Demo Codes helper for quick review */}
+                    <div className="mt-3 pt-2.5 border-t border-dashed border-[#E2E8F0] flex items-center justify-between flex-wrap gap-1.5 text-[11px]">
+                      <span className="text-[#94A3B8] font-medium">Códigos de prueba rápida:</span>
+                      <div className="flex items-center space-x-1.5">
+                        {['518472', '829104', '250816'].map((demoCode) => (
+                          <button
+                            key={demoCode}
+                            type="button"
+                            onClick={() => {
+                              setAccessCode(demoCode);
+                              setCodeError('');
+                            }}
+                            className="px-2 py-0.5 rounded-md bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#0F766E] font-mono font-bold text-[11px] transition-colors border border-[#CBD5E1]"
+                            title={`Usar código ${demoCode}`}
+                          >
+                            {demoCode}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-4 flex justify-end">
+                {/* PRIMARY CTA BUTTON */}
+                <div className="pt-2">
                   <button
-                    id="btn-step1-next"
-                    disabled={!name.trim() || !whatsapp.trim()}
-                    onClick={() => setStep(2)}
-                    className="inline-flex items-center px-6 py-3 rounded-xl bg-[#0F766E] text-white font-semibold text-sm hover:bg-[#115E59] disabled:opacity-50 transition-all shadow-xs"
+                    id="btn-validate-vip-code"
+                    type="button"
+                    onClick={handleValidateStep1}
+                    className="w-full py-3.5 px-6 rounded-2xl bg-[#0F766E] hover:bg-[#115E59] active:bg-[#134E4A] text-white font-bold text-sm sm:text-base flex items-center justify-center space-x-2 transition-all shadow-md hover:shadow-lg transform active:scale-98"
                   >
-                    <span>Siguiente Paso</span>
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                    <span>Validar Código VIP & Iniciar Diagnóstico</span>
+                    <ArrowRight className="w-4 h-4 ml-1" />
                   </button>
                 </div>
               </motion.div>
             )}
 
-            {/* STEP 2 */}
+            {/* ================= STEP 2: MOTIVO DE ATENCIÓN DIGESTIVA ================= */}
             {step === 2 && (
               <motion.div
                 key="step2"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
+                className="space-y-5"
               >
                 <div>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#D1FAE5] text-[#065F46] mb-2">
-                    <ShieldCheck className="w-3.5 h-3.5 mr-1 text-[#059669]" />
-                    Acceso Exclusivo Clientas Coli Plus
-                  </span>
-                  <h2 className="text-2xl font-bold text-[#0F172A] font-display">
-                    Código de Validación de tu Frasco
-                  </h2>
-                  <p className="text-sm text-[#64748B] mt-1">
-                    Ingresa el código VIP de 6 dígitos que acompaña tu frasco de Coli Plus (o tu remisión de compra de ColShopi).
-                  </p>
-                </div>
-
-                <div className="bg-[#FAF6F0] p-4 rounded-2xl border border-[#E2E8F0] text-xs text-[#475569] space-y-2">
-                  <p className="font-semibold text-[#0F172A]">Códigos de Acceso Rápido y Prueba:</p>
-                  <p>
-                    Si adquiriste tu frasco recientemente o estás evaluando la PWA, puedes tocar uno de estos códigos verificados:
-                  </p>
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => { setAccessCode('518472'); setCodeError(''); }}
-                      className="px-2.5 py-1.5 bg-white border border-[#CBD5E1] rounded-lg font-mono font-bold text-[#0F766E] hover:bg-[#ECFDF5]"
-                    >
-                      518472 (Código Frasco VIP)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setAccessCode('COLI30'); setCodeError(''); }}
-                      className="px-2.5 py-1.5 bg-white border border-[#CBD5E1] rounded-lg font-mono font-bold text-[#047857] hover:bg-[#ECFDF5]"
-                    >
-                      COLI30 (Demo 30D)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setAccessCode('VIP777'); setCodeError(''); }}
-                      className="px-2.5 py-1.5 bg-white border border-[#CBD5E1] rounded-lg font-mono font-bold text-[#D97706] hover:bg-[#FFFBEB]"
-                    >
-                      VIP777 (VIP Especial)
-                    </button>
+                  <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#ECFDF5] text-[#047857] mb-2">
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#10B981]" />
+                    <span>Código Verificado Exitosamente</span>
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[#334155] uppercase tracking-wider mb-1.5">
-                    Código de Activación VIP
-                  </label>
-                  <input
-                    id="input-access-code"
-                    type="text"
-                    maxLength={10}
-                    placeholder="Ej. 518472 o COLI30"
-                    value={accessCode}
-                    onChange={(e) => { setAccessCode(e.target.value); setCodeError(''); }}
-                    className="w-full px-4 py-3 rounded-xl border border-[#CBD5E1] focus:ring-2 focus:ring-[#0F766E] text-base font-mono uppercase tracking-widest bg-[#F8FAFC]"
-                  />
-                  {codeError && <p className="text-xs text-red-600 mt-1.5 font-medium">{codeError}</p>}
-                </div>
-
-                <div className="pt-4 flex justify-between">
-                  <button
-                    type="button"
-                    onClick={() => setStep(1)}
-                    className="inline-flex items-center px-4 py-2.5 rounded-xl border border-[#CBD5E1] text-[#475569] text-sm font-semibold hover:bg-[#F8FAFC]"
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-1.5" />
-                    Volver
-                  </button>
-                  <button
-                    id="btn-step2-verify"
-                    onClick={handleVerifyCode}
-                    className="inline-flex items-center px-6 py-3 rounded-xl bg-[#0F766E] text-white font-semibold text-sm hover:bg-[#115E59] transition-all shadow-xs"
-                  >
-                    <span>Validar Código</span>
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {/* STEP 3 */}
-            {step === 3 && (
-              <motion.div
-                key="step3"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
-              >
-                <div>
-                  <h2 className="text-2xl font-bold text-[#0F172A] font-display">
+                  <h2 className="text-xl sm:text-2xl font-bold text-[#0F172A] font-display">
                     ¿Cuál es tu principal motivo de atención?
                   </h2>
-                  <p className="text-sm text-[#64748B] mt-1">
+                  <p className="text-xs sm:text-sm text-[#64748B] mt-1">
                     Esto calibrará los consejos de bienestar diarios de Bianka y el horario óptimo de tu dosis de Coli Plus.
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3">
+                <div className="space-y-3">
                   {DIGESTIVE_ANGLES.map((item) => {
                     const isSelected = digestiveAngle === item.angle;
                     return (
@@ -370,7 +472,7 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ onComplete }) =>
                         onClick={() => setDigestiveAngle(item.angle)}
                         className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-start space-x-3.5 ${
                           isSelected
-                            ? 'border-[#0F766E] bg-[#F0FDF4]'
+                            ? 'border-[#0F766E] bg-[#F0FDF4] shadow-xs'
                             : 'border-[#E2E8F0] hover:border-[#CBD5E1] bg-white'
                         }`}
                       >
@@ -389,42 +491,43 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ onComplete }) =>
                   })}
                 </div>
 
-                <div className="pt-4 flex justify-between">
+                <div className="pt-3 flex justify-between items-center">
                   <button
                     type="button"
-                    onClick={() => setStep(2)}
-                    className="inline-flex items-center px-4 py-2.5 rounded-xl border border-[#CBD5E1] text-[#475569] text-sm font-semibold hover:bg-[#F8FAFC]"
+                    onClick={() => setStep(1)}
+                    className="inline-flex items-center px-4 py-2.5 rounded-xl border border-[#CBD5E1] text-[#475569] text-xs sm:text-sm font-semibold hover:bg-[#F8FAFC]"
                   >
                     <ArrowLeft className="w-4 h-4 mr-1.5" />
                     Volver
                   </button>
                   <button
-                    id="btn-step3-next"
-                    onClick={() => setStep(4)}
-                    className="inline-flex items-center px-6 py-3 rounded-xl bg-[#0F766E] text-white font-semibold text-sm hover:bg-[#115E59] transition-all shadow-xs"
+                    id="btn-step2-next"
+                    type="button"
+                    onClick={() => setStep(3)}
+                    className="inline-flex items-center px-6 py-3 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white font-bold text-xs sm:text-sm transition-all shadow-xs"
                   >
-                    <span>Continuar</span>
+                    <span>Siguiente Paso</span>
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </button>
                 </div>
               </motion.div>
             )}
 
-            {/* STEP 4 */}
-            {step === 4 && (
+            {/* ================= STEP 3: SÍNTOMAS Y HÁBITOS ================= */}
+            {step === 3 && (
               <motion.div
-                key="step4"
+                key="step3"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
+                className="space-y-5"
               >
                 <div>
-                  <h2 className="text-2xl font-bold text-[#0F172A] font-display">
+                  <h2 className="text-xl sm:text-2xl font-bold text-[#0F172A] font-display">
                     Selecciona los síntomas que experimentas
                   </h2>
-                  <p className="text-sm text-[#64748B] mt-1">
-                    Marca todo lo que hayas sentido recientemente para medir tu curva de alivio y evolución digestiva.
+                  <p className="text-xs sm:text-sm text-[#64748B] mt-1">
+                    Marca todo lo que hayas sentido recientemente para medir tu curva de alivio y evolución digestiva con Coli Plus.
                   </p>
                 </div>
 
@@ -449,37 +552,101 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ onComplete }) =>
                   })}
                 </div>
 
-                <div className="p-4 rounded-2xl bg-[#ECFDF5] border border-[#A7F3D0] flex items-center space-x-3">
-                  <Sparkles className="w-6 h-6 text-[#0F766E] shrink-0" />
-                  <p className="text-xs text-[#065F46] font-medium leading-relaxed">
-                    Al finalizar, activaremos tu guía de 30 días en 4 fases con Bianka y tu registro diario de hidratación y bienestar.
+                <div className="pt-3 flex justify-between items-center">
+                  <button
+                    type="button"
+                    onClick={() => setStep(2)}
+                    className="inline-flex items-center px-4 py-2.5 rounded-xl border border-[#CBD5E1] text-[#475569] text-xs sm:text-sm font-semibold hover:bg-[#F8FAFC]"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-1.5" />
+                    Volver
+                  </button>
+                  <button
+                    id="btn-step3-next"
+                    type="button"
+                    onClick={() => setStep(4)}
+                    className="inline-flex items-center px-6 py-3 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white font-bold text-xs sm:text-sm transition-all shadow-xs"
+                  >
+                    <span>Ver Resumen</span>
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ================= STEP 4: ACTIVACIÓN Y CONFIRMACIÓN ================= */}
+            {step === 4 && (
+              <motion.div
+                key="step4"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-5"
+              >
+                <div className="text-center">
+                  <div className="mx-auto w-14 h-14 rounded-2xl bg-[#ECFDF5] flex items-center justify-center text-[#10B981] mb-2 border border-[#A7F3D0]">
+                    <Sparkles className="w-7 h-7" />
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-[#0F172A] font-display">
+                    ¡Tu Protocolo Está Listo!
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#64748B] mt-1">
+                    Bianka ha calibrado tu plan de 30 días en 4 fases progresivas.
                   </p>
                 </div>
 
-                <div className="pt-4 flex justify-between">
+                {/* Summary Card */}
+                <div className="bg-[#FAF6F0] p-4 rounded-2xl border border-[#E2E8F0] space-y-2 text-xs">
+                  <div className="flex justify-between py-1 border-b border-[#E2E8F0]">
+                    <span className="text-[#64748B]">Compradora Registrada:</span>
+                    <strong className="text-[#0F172A]">{name}</strong>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-[#E2E8F0]">
+                    <span className="text-[#64748B]">WhatsApp:</span>
+                    <strong className="text-[#0F172A]">{whatsapp}</strong>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-[#E2E8F0]">
+                    <span className="text-[#64748B]">Enfoque Digestivo:</span>
+                    <strong className="text-[#0F766E]">{digestiveAngle}</strong>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="text-[#64748B]">Código VIP Validado:</span>
+                    <strong className="font-mono text-[#0F766E]">{accessCode}</strong>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#ECFDF5] border border-[#A7F3D0] flex items-start space-x-3">
+                  <BiankaAvatar size={42} className="shrink-0 mt-0.5" />
+                  <p className="text-xs text-[#065F46] leading-relaxed">
+                    <strong>Mensaje de Bianka:</strong> «Cada día a las 7:00 AM desbloquearemos tu audio-guía matutina, tus tareas del día y tu registro de bienestar. ¡Vamos juntas por tu bienestar digestivo!»
+                  </p>
+                </div>
+
+                <div className="pt-3 flex justify-between items-center">
                   <button
                     type="button"
                     onClick={() => setStep(3)}
-                    className="inline-flex items-center px-4 py-2.5 rounded-xl border border-[#CBD5E1] text-[#475569] text-sm font-semibold hover:bg-[#F8FAFC]"
+                    className="inline-flex items-center px-4 py-2.5 rounded-xl border border-[#CBD5E1] text-[#475569] text-xs sm:text-sm font-semibold hover:bg-[#F8FAFC]"
                   >
                     <ArrowLeft className="w-4 h-4 mr-1.5" />
                     Volver
                   </button>
                   <button
                     id="btn-finish-onboarding"
+                    type="button"
                     disabled={isGenerating}
                     onClick={handleFinish}
-                    className="inline-flex items-center px-7 py-3 rounded-xl bg-linear-to-r from-[#0F766E] to-[#10B981] text-white font-bold text-sm hover:opacity-95 transition-all shadow-md"
+                    className="inline-flex items-center px-6 py-3 rounded-xl bg-linear-to-r from-[#0F766E] to-[#10B981] text-white font-bold text-xs sm:text-sm transition-all shadow-md hover:opacity-95"
                   >
                     {isGenerating ? (
                       <>
                         <Activity className="w-4 h-4 mr-2 animate-spin" />
-                        <span>Construyendo Tu Guía...</span>
+                        <span>Activando Tu Protocolo...</span>
                       </>
                     ) : (
                       <>
                         <Sparkles className="w-4 h-4 mr-2" />
-                        <span>Comenzar Mi Transformación</span>
+                        <span>Acceder al Programa de 30 Días</span>
                       </>
                     )}
                   </button>
@@ -490,7 +657,43 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ onComplete }) =>
           </AnimatePresence>
         </div>
 
+        {/* CARD FOOTER - Exactly like Portada TY */}
+        <div className="bg-[#FAF6F0] px-5 py-3.5 border-t border-[#E2E8F0] text-center space-y-1">
+          <p className="text-[11px] text-[#64748B] flex items-center justify-center flex-wrap gap-1 font-medium">
+            <Lock className="w-3 h-3 text-[#0F766E] inline" />
+            <span>Comunidad Exclusiva ColShopi Tienda By Leps Digital</span>
+            <span>•</span>
+            <span>Garantía & Registro INVIMA NSA-0012423-2022</span>
+          </p>
+
+          {onOpenAdmin && (
+            <div>
+              <button
+                type="button"
+                onClick={onOpenAdmin}
+                className="text-[10px] text-[#94A3B8] hover:text-[#0F766E] transition-colors underline"
+              >
+                Acceso Administrativo ColShopi (contacto@colshopi.com)
+              </button>
+            </div>
+          )}
+        </div>
+
       </div>
+
+      {/* Support prompt beneath card */}
+      <div className="text-center mt-3 text-xs text-[#64748B]">
+        <span>¿Dudas con tu frasco de Coli Plus? Escribe a Bianka al WhatsApp: </span>
+        <a
+          href={whatsappCodeUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-bold text-[#0F766E] hover:underline"
+        >
+          {WHATSAPP_DISPLAY_NUMBER}
+        </a>
+      </div>
+
     </div>
   );
 };
