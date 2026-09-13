@@ -11,14 +11,14 @@ import {
   Info,
   Lock,
   MessageCircle,
-  ExternalLink
+  ExternalLink,
+  Camera
 } from 'lucide-react';
 import { DigestiveAngle, UserProfile } from '../types';
 import {
   validateStrictVIPCode,
   markCodeAsClaimed,
-  getWhatsAppCodeRequestUrl,
-  WHATSAPP_DISPLAY_NUMBER
+  getWhatsAppCodeRequestUrl
 } from '../data/vipCodes';
 import { BiankaAvatar } from './BiankaAvatar';
 import { ColShopiLogo } from './ColShopiLogo';
@@ -269,7 +269,21 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({
                 {/* WELCOME BANNER WITH BIANKA */}
                 <div className="bg-[#0F172A] rounded-2xl p-4 sm:p-5 text-white border border-[#1E293B] shadow-lg">
                   <div className="flex items-start space-x-3.5 sm:space-x-4">
-                    <BiankaAvatar size={70} showBadge className="shrink-0 mt-0.5" />
+                    <div className="flex flex-col items-center shrink-0">
+                      <BiankaAvatar size={70} showBadge isEditable className="mt-0.5 shadow-md ring-2 ring-[#38BDF8]/40" />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          const input = (e.currentTarget.previousElementSibling as HTMLElement)?.querySelector('input[type="file"]') as HTMLInputElement;
+                          input?.click();
+                        }}
+                        className="text-[10px] text-[#38BDF8] hover:text-[#7DD3FC] font-medium mt-1 transition-colors flex items-center gap-1 cursor-pointer"
+                        title="Haz clic para subir Bianka en Circulo.jpg"
+                      >
+                        <Camera className="w-3 h-3" />
+                        <span>Cambiar foto</span>
+                      </button>
+                    </div>
                     <div className="flex-1 min-w-0">
                       <h2 className="text-sm sm:text-base font-bold text-white flex items-center flex-wrap gap-1">
                         <span>¡Bienvenida a ColShopi Tienda! Soy Bianka</span>
@@ -703,19 +717,6 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({
           )}
         </div>
 
-      </div>
-
-      {/* Support prompt beneath card */}
-      <div className="text-center mt-3 text-xs text-[#64748B]">
-        <span>¿Dudas con tu frasco de Coli Plus? Escribe a Bianka al WhatsApp: </span>
-        <a
-          href={whatsappCodeUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-bold text-[#0F766E] hover:underline"
-        >
-          {WHATSAPP_DISPLAY_NUMBER}
-        </a>
       </div>
 
     </div>

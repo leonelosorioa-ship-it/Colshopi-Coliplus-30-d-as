@@ -164,6 +164,30 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString(), totalUsers: usersDb.size });
 });
 
+// Upload and persist Bianka's avatar image
+app.post('/api/upload-avatar', (req, res) => {
+  try {
+    const { imageBase64 } = req.body;
+    if (!imageBase64) {
+      return res.status(400).json({ error: 'Falta la imagen en base64' });
+    }
+    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+    const fs = require('fs');
+    const publicDir = path.join(process.cwd(), 'public');
+    if (!fs.existsSync(publicDir)) {
+      fs.mkdirSync(publicDir, { recursive: true });
+    }
+    fs.writeFileSync(path.join(publicDir, 'bianka.jpg'), buffer);
+    fs.writeFileSync(path.join(publicDir, 'Bianka en Circulo.jpg'), buffer);
+    fs.writeFileSync(path.join(publicDir, 'bianka.png'), buffer);
+    return res.json({ success: true, url: '/Bianka en Circulo.jpg' });
+  } catch (error: any) {
+    console.error('Error saving avatar:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 // Push VAPID Public Key
 app.get('/api/push/vapid-public-key', (req, res) => {
   res.json({ publicKey: vapidKeys.publicKey });

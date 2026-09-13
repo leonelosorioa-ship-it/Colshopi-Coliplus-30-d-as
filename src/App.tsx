@@ -418,25 +418,12 @@ export default function App() {
 
       {/* FOOTER */}
       <footer className="bg-[#FAF6F0] border-t border-[#E2E8F0] mt-12 py-8 px-4 sm:px-6">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#64748B]">
-          <div className="flex items-center space-x-2">
-            <span className="font-bold text-[#0F172A]">ColiFem 30D</span>
-            <span>•</span>
-            <span>Guía de Transformación Digestiva y Cuidado del Colon</span>
-            <span>•</span>
-            <span>ColShopi Tienda By Leps Digital</span>
-          </div>
-
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => setIsAdminOpen(true)}
-              className="text-[#94A3B8] hover:text-[#0F766E] transition-colors"
-            >
-              Consola Admin
-            </button>
-            <span>•</span>
-            <span>Acompañamiento funcional exclusivo Coli Plus</span>
-          </div>
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-2 text-xs text-[#64748B] text-center">
+          <span className="font-bold text-[#0F172A]">ColiFem 30D</span>
+          <span>•</span>
+          <span>Guía de Transformación Digestiva y Cuidado del Colon</span>
+          <span>•</span>
+          <span>ColShopi Tienda By Leps Digital</span>
         </div>
       </footer>
 

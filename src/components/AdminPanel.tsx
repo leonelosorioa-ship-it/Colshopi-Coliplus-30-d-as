@@ -16,10 +16,12 @@ import {
   Sparkles,
   Key,
   Copy,
-  Check
+  Check,
+  Upload
 } from 'lucide-react';
 import { UserProfile } from '../types';
 import { SECRET_50_VIP_CODES, getClaimedCodes } from '../data/vipCodes';
+import { BiankaAvatar } from './BiankaAvatar';
 
 interface AdminPanelProps {
   isOpen: boolean;
@@ -46,8 +48,32 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAngleFilter, setSelectedAngleFilter] = useState('all');
 
-  // Admin Tab view: 'codes' | 'users' | 'metrics'
-  const [adminTab, setAdminTab] = useState<'codes' | 'users' | 'metrics'>('codes');
+  // Admin Tab view: 'codes' | 'users' | 'metrics' | 'avatar'
+  const [adminTab, setAdminTab] = useState<'codes' | 'users' | 'metrics' | 'avatar'>('codes');
+  const [avatarMsg, setAvatarMsg] = useState<string | null>(null);
+
+  const handleUploadBiankaPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (dataUrl) {
+        localStorage.setItem('bianka_custom_photo', dataUrl);
+        window.dispatchEvent(new Event('bianka_photo_updated'));
+        setAvatarMsg('¡Foto de Bianka actualizada exitosamente en toda la app!');
+        setTimeout(() => setAvatarMsg(null), 4000);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleResetBiankaPhoto = () => {
+    localStorage.removeItem('bianka_custom_photo');
+    window.dispatchEvent(new Event('bianka_photo_updated'));
+    setAvatarMsg('Se ha restablecido a la ilustración oficial de Bianka.');
+    setTimeout(() => setAvatarMsg(null), 4000);
+  };
 
   // 50 Secret VIP Codes state
   const [vipCodesInfo, setVipCodesInfo] = useState<{
@@ -379,6 +405,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                   <Bell className="w-3.5 h-3.5" />
                   <span>Métricas & Push</span>
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAdminTab('avatar')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shrink-0 ${
+                    adminTab === 'avatar'
+                      ? 'bg-[#0F766E] text-white shadow-xs'
+                      : 'bg-[#F1F5F9] text-[#475569] hover:bg-[#E2E8F0]'
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Foto de Bianka</span>
+                </button>
               </div>
 
               {/* ================= TAB 1: 50 CÓDIGOS VIP SECRETOS ================= */}
@@ -672,6 +711,73 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                   </button>
                 </div>
               </div>
+              {/* ================= TAB 4: FOTO DE BIANKA ================= */}
+              {adminTab === 'avatar' && (
+                <div className="space-y-6 p-6 bg-white rounded-2xl border border-[#E2E8F0] shadow-xs">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                    <div className="flex flex-col items-center gap-2 shrink-0">
+                      <BiankaAvatar size={120} showBadge className="shadow-lg ring-4 ring-[#38BDF8]/40" />
+                      <span className="text-[11px] font-bold text-[#0F766E] bg-[#ECFDF5] px-2.5 py-0.5 rounded-full">
+                        Vista Previa
+                      </span>
+                    </div>
+
+                    <div className="space-y-3 text-center sm:text-left flex-1">
+                      <div>
+                        <h4 className="font-bold text-[#0F172A] text-base sm:text-lg">
+                          Foto Oficial de Bianka (Avatar de Bienestar)
+                        </h4>
+                        <p className="text-xs text-[#64748B] mt-1 leading-relaxed">
+                          Sube tu imagen <strong>Bianka en Circulo.jpg</strong> (o cualquier foto oficial de Bianka en formato JPG/PNG). Se aplicará de forma automática en toda la plataforma: en el chat de orientación, en la portada de bienvenida y en cada pantalla donde aparece Bianka.
+                        </p>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-[#FAF6F0] border border-[#E2E8F0] text-xs text-[#334155] space-y-1.5">
+                        <div className="font-semibold flex items-center justify-center sm:justify-start space-x-1.5 text-[#0F766E]">
+                          <Check className="w-4 h-4" />
+                          <span>Instrucción Rápida:</span>
+                        </div>
+                        <p className="text-[11px] text-[#64748B]">
+                          Haz clic en el botón verde a continuación y selecciona el archivo <strong>Bianka en Circulo.jpg</strong> de tu dispositivo. La app lo guardará de inmediato.
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 pt-1">
+                        <label className="cursor-pointer px-4 py-2.5 bg-[#0F766E] hover:bg-[#0D9488] text-white text-xs font-bold rounded-xl transition-all flex items-center space-x-2 shadow-xs active:scale-95">
+                          <Upload className="w-4 h-4" />
+                          <span>Seleccionar "Bianka en Circulo.jpg"</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleUploadBiankaPhoto}
+                            className="hidden"
+                          />
+                        </label>
+
+                        <button
+                          type="button"
+                          onClick={handleResetBiankaPhoto}
+                          className="px-3.5 py-2.5 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#64748B] text-xs font-semibold rounded-xl transition-colors"
+                        >
+                          Restablecer a Ilustración Oficial
+                        </button>
+                      </div>
+
+                      {avatarMsg && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800 flex items-center justify-center sm:justify-start space-x-2"
+                        >
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span>{avatarMsg}</span>
+                        </motion.div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
             </div>
           )}
 
