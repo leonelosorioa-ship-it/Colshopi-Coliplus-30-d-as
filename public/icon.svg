@@ -1,0 +1,19 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' width='512' height='512'>
+  <defs>
+    <linearGradient id='grad' x1='0%' y1='0%' x2='100%' y2='100%'>
+      <stop offset='0%' stop-color='#0F766E'/>
+      <stop offset='100%' stop-color='#10B981'/>
+    </linearGradient>
+    <linearGradient id='gold' x1='0%' y1='0%' x2='100%' y2='100%'>
+      <stop offset='0%' stop-color='#F59E0B'/>
+      <stop offset='100%' stop-color='#D97706'/>
+    </linearGradient>
+  </defs>
+  <rect width='512' height='512' rx='128' fill='url(#grad)'/>
+  <circle cx='256' cy='256' r='200' fill='none' stroke='#D1FAE5' stroke-width='8' opacity='0.4'/>
+  <!-- stylized intestine/leaf wellness badge -->
+  <path d='M256 120 C 190 120, 160 160, 160 210 C 160 270, 220 270, 220 310 C 220 340, 190 350, 180 350' fill='none' stroke='#FFFFFF' stroke-width='24' stroke-linecap='round'/>
+  <path d='M256 120 C 322 120, 352 160, 352 210 C 352 270, 292 270, 292 310 C 292 340, 322 350, 332 350' fill='none' stroke='#FFFFFF' stroke-width='24' stroke-linecap='round'/>
+  <circle cx='256' cy='380' r='24' fill='url(#gold)'/>
+  <path d='M256 110 C 270 70, 330 60, 340 100 C 310 110, 275 110, 256 110 Z' fill='#84CC16'/>
+</svg>

@@ -1,0 +1,6 @@
+{
+  "name": "ColiPlus 30D: Protocolo de Transformación Digestiva y Cuidado del Colon",
+  "description": "Acompañamiento exclusivo de 30 días para compradores de ColiPlus de ColShopi con protocolo de 4 fases, mentora Marié, seguimiento digestivo, recetario antiinflamatorio y notificaciones push.",
+  "requestFramePermissions": ["notifications"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
