@@ -64,7 +64,7 @@ export function getDayCompletionTimestamp(user: UserProfile | null, day: number)
 
   // 4. Fallback if day is marked completed but timestamp was omitted:
   // Initialize to Date.now() so the 24h countdown is active right now!
-  if (Array.isArray(user.completedDays) && user.completedDays.includes(day)) {
+  if (user.completedDays.includes(day)) {
     const now = Date.now();
     try {
       localStorage.setItem(localKey, now.toString());
