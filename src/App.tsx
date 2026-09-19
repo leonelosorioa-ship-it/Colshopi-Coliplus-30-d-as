@@ -10,7 +10,6 @@ import {
   Sparkles,
   ShoppingBag,
   ShieldAlert,
-  RotateCcw,
   CheckCircle2,
   Download
 } from 'lucide-react';
@@ -32,34 +31,6 @@ import { pwaManager } from './utils/pwaManager';
 import { getDayCompletionTimestamp, getChronologicalStatus } from './utils/chronologicalCycle';
 
 const LOCAL_STORAGE_KEY = 'coliplus_profile_30d_v1';
-
-// Default prefilled demo profile for fast trial or instant preview
-const DEMO_PROFILE: UserProfile = {
-  id: 'VIP-7821',
-  name: 'Carolina Montoya',
-  whatsapp: '+57 312 456 7890',
-  email: 'carolina.montoya@ejemplo.com',
-  ageRange: '25-34',
-  accessCode: 'COLI30',
-  digestiveAngle: 'Inflamación constante y gases',
-  symptoms: [
-    'Vientre inflamado al final de la tarde',
-    'Gases retenidos que causan pinchazos o cólicos',
-    'Sensación de evacuación incompleta'
-  ],
-  currentDay: 14,
-  completedDays: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
-  checkIns: {
-    1: { date: '2026-03-01', tookSupplement: true, waterLiters: 1.5, antiInflammatoryMeal: true, bloatingScore: 5, energyScore: 2, digestionType: 'pesada', bristolType: 2 },
-    3: { date: '2026-03-03', tookSupplement: true, waterLiters: 2.0, antiInflammatoryMeal: true, bloatingScore: 4, energyScore: 3, digestionType: 'regular', bristolType: 3 },
-    7: { date: '2026-03-07', tookSupplement: true, waterLiters: 2.2, antiInflammatoryMeal: true, bloatingScore: 3, energyScore: 3, digestionType: 'liviana', bristolType: 3 },
-    10: { date: '2026-03-10', tookSupplement: true, waterLiters: 2.5, antiInflammatoryMeal: true, bloatingScore: 2, energyScore: 4, digestionType: 'liviana', bristolType: 4 },
-    14: { date: '2026-03-14', tookSupplement: true, waterLiters: 2.3, antiInflammatoryMeal: true, bloatingScore: 2, energyScore: 5, digestionType: 'liviana', bristolType: 4 }
-  },
-  hasPush: true,
-  createdAt: '2026-03-01T10:00:00.000Z',
-  lastActive: new Date().toISOString()
-};
 
 export default function App() {
   const [user, setUser] = useState<UserProfile | null>(() => {
@@ -305,19 +276,8 @@ export default function App() {
     }
   };
 
-  // Quick Demo account loader
-  const handleLoadDemo = () => {
-    setUser(DEMO_PROFILE);
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEMO_PROFILE));
-  };
+  // Remove reset and demo overwrite to ensure users follow their 30-day program strictly without resetting
 
-  const handleResetAccount = () => {
-    if (window.confirm('¿Deseas reiniciar la aplicación y volver al formulario de registro inicial?')) {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
-      setUser(null);
-      setActiveTab('calendar');
-    }
-  };
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#1E293B] flex flex-col selection:bg-[#D1FAE5] selection:text-[#0F766E]">
@@ -393,20 +353,6 @@ export default function App() {
                 >
                   <Download className="w-3.5 h-3.5 text-[#0891B2]" />
                   <span>Descargar App</span>
-                </button>
-                <span className="hidden sm:inline">•</span>
-                <button
-                  onClick={handleLoadDemo}
-                  className="text-[11px] text-[#0F766E] hover:underline font-semibold cursor-pointer"
-                >
-                  Cargar Demo (Día 14)
-                </button>
-                <span>•</span>
-                <button
-                  onClick={handleResetAccount}
-                  className="text-[11px] text-[#94A3B8] hover:text-red-600 font-semibold cursor-pointer"
-                >
-                  Reiniciar
                 </button>
               </div>
             </div>
@@ -563,14 +509,11 @@ export default function App() {
         onInstallAccepted={() => setPwaInstallPrompt(null)}
       />
 
-      {/* 6. Welcome Audio Banner & Screen Wake Lock Controller */}
-      {user && (
-        <WelcomeAudioBanner
-          userName={user.name}
-          userId={user.id}
-          triggerImmediately={justCompletedOnboarding}
-        />
-      )}
+      {/* 6. Official Audio & Screen Wake Lock Controller - Activates on open, active or reload */}
+      <WelcomeAudioBanner
+        userName={user?.name || 'Hermosa'}
+        userId={user?.id || 'guest'}
+      />
 
     </div>
   );

@@ -5,7 +5,8 @@
 // ============================================================================
 
 export const BIANKA_AUDIO_ASSETS = {
-  WELCOME: 'https://f005.backblazeb2.com/file/ColShopi/ColiPlus/Audio+Bianka+Bienvenida+App.mp3',
+  APP_START: 'https://f005.backblazeb2.com/file/ColShopi/ColiPlus/ColShopi+App.mp3',
+  WELCOME: 'https://f005.backblazeb2.com/file/ColShopi/ColiPlus/ColShopi+App.mp3',
   DAY_10: 'https://f005.backblazeb2.com/file/ColShopi/ColiPlus/Seguimiento+App+Coli+10+d%C3%ADas.mp3',
   DAY_15: 'https://f005.backblazeb2.com/file/ColShopi/ColiPlus/Seguimiento+App+Coli+15+d%C3%ADas.mp3',
   DAY_30: 'https://f005.backblazeb2.com/file/ColShopi/ColiPlus/Final+30+d%C3%ADas+App+Coli.mp3',
@@ -99,12 +100,14 @@ export function stopActiveBiankaAudio(): void {
  */
 export function playBiankaAudio(
   audioUrl: string,
-  callbacks?: BiankaAudioCallbacks
+  callbacks?: BiankaAudioCallbacks,
+  volume: number = 0.5
 ): HTMLAudioElement {
   // Detener cualquier audio previo
   stopActiveBiankaAudio();
 
   const audio = new Audio(audioUrl);
+  audio.volume = Math.max(0, Math.min(1, volume));
   activeGlobalAudio = audio;
   audio.preload = 'auto';
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Play, Pause, X, Volume2, Sparkles, Sun, CheckCircle } from 'lucide-react';
 import { BiankaAvatar } from './BiankaAvatar';
@@ -10,17 +10,15 @@ import {
 } from '../utils/biankaAudioPlayer';
 
 interface WelcomeAudioBannerProps {
-  userName: string;
-  userId: string;
-  triggerImmediately?: boolean;
+  userName?: string;
+  userId?: string;
 }
 
 export const WelcomeAudioBanner: React.FC<WelcomeAudioBannerProps> = ({
-  userName,
-  userId,
-  triggerImmediately = false
+  userName = 'Hermosa',
+  userId = 'guest'
 }) => {
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isAutoplayBlocked, setIsAutoplayBlocked] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -28,50 +26,60 @@ export const WelcomeAudioBanner: React.FC<WelcomeAudioBannerProps> = ({
   const [hasFinished, setHasFinished] = useState(false);
   const audioInstanceRef = useRef<HTMLAudioElement | null>(null);
 
-  const storageKey = `bianka_welcome_audio_played_${userId || 'guest'}`;
+  // Audio oficial configurado: https://f005.backblazeb2.com/file/ColShopi/ColiPlus/ColShopi+App.mp3
+  // Volumen promedio medio (0.5)
+  const OFFICIAL_AUDIO_URL = BIANKA_AUDIO_ASSETS.APP_START;
+  const MEDIUM_VOLUME = 0.5;
 
-  // Start audio playback
-  const startAudioPlayback = () => {
+  // Iniciar reproducción de audio con volumen medio y wake lock
+  const startAudioPlayback = useCallback(() => {
     try {
       if (audioInstanceRef.current) {
-        audioInstanceRef.current.play().then(() => {
-          setIsPlaying(true);
-          setIsAutoplayBlocked(false);
-        }).catch((err) => {
-          console.warn('Playback error:', err);
-          setIsAutoplayBlocked(true);
-        });
+        audioInstanceRef.current.volume = MEDIUM_VOLUME;
+        audioInstanceRef.current
+          .play()
+          .then(() => {
+            setIsPlaying(true);
+            setIsAutoplayBlocked(false);
+            setIsVisible(true);
+          })
+          .catch((err) => {
+            console.warn('Autoplay bloqueado por políticas del navegador:', err);
+            setIsAutoplayBlocked(true);
+            setIsVisible(true);
+          });
         return;
       }
 
-      const audio = playBiankaAudio(BIANKA_AUDIO_ASSETS.WELCOME, {
-        onPlay: () => {
-          setIsPlaying(true);
-          setIsAutoplayBlocked(false);
-          setIsVisible(true);
+      const audio = playBiankaAudio(
+        OFFICIAL_AUDIO_URL,
+        {
+          onPlay: () => {
+            setIsPlaying(true);
+            setIsAutoplayBlocked(false);
+            setIsVisible(true);
+          },
+          onPause: () => {
+            setIsPlaying(false);
+          },
+          onEnded: () => {
+            setIsPlaying(false);
+            setHasFinished(true);
+          },
+          onTimeUpdate: (cur, dur) => {
+            setCurrentTime(cur);
+            if (dur && !isNaN(dur)) setDuration(dur);
+          },
+          onAutoplayBlocked: () => {
+            setIsAutoplayBlocked(true);
+            setIsVisible(true);
+          },
+          onError: () => {
+            setIsPlaying(false);
+          }
         },
-        onPause: () => {
-          setIsPlaying(false);
-        },
-        onEnded: () => {
-          setIsPlaying(false);
-          setHasFinished(true);
-          try {
-            localStorage.setItem(storageKey, 'true');
-          } catch {}
-        },
-        onTimeUpdate: (cur, dur) => {
-          setCurrentTime(cur);
-          if (dur && !isNaN(dur)) setDuration(dur);
-        },
-        onAutoplayBlocked: () => {
-          setIsAutoplayBlocked(true);
-          setIsVisible(true);
-        },
-        onError: () => {
-          setIsPlaying(false);
-        }
-      });
+        MEDIUM_VOLUME
+      );
 
       audioInstanceRef.current = audio;
     } catch (e) {
@@ -79,7 +87,7 @@ export const WelcomeAudioBanner: React.FC<WelcomeAudioBannerProps> = ({
       setIsAutoplayBlocked(true);
       setIsVisible(true);
     }
-  };
+  }, [OFFICIAL_AUDIO_URL]);
 
   const handleTogglePlayPause = (e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -92,12 +100,16 @@ export const WelcomeAudioBanner: React.FC<WelcomeAudioBannerProps> = ({
       audioInstanceRef.current.pause();
       setIsPlaying(false);
     } else {
-      audioInstanceRef.current.play().then(() => {
-        setIsPlaying(true);
-        setIsAutoplayBlocked(false);
-      }).catch(() => {
-        setIsAutoplayBlocked(true);
-      });
+      audioInstanceRef.current.volume = MEDIUM_VOLUME;
+      audioInstanceRef.current
+        .play()
+        .then(() => {
+          setIsPlaying(true);
+          setIsAutoplayBlocked(false);
+        })
+        .catch(() => {
+          setIsAutoplayBlocked(true);
+        });
     }
   };
 
@@ -107,27 +119,69 @@ export const WelcomeAudioBanner: React.FC<WelcomeAudioBannerProps> = ({
     audioInstanceRef.current = null;
     setIsPlaying(false);
     setIsVisible(false);
-    try {
-      localStorage.setItem(storageKey, 'true');
-    } catch {}
   };
 
-  // Check if we should trigger the welcome audio
+  // 1. DISPARADOR AL ABRIR / RECARGAR LA APLICACIÓN
   useEffect(() => {
-    const hasPlayed = localStorage.getItem(storageKey) === 'true';
+    setIsVisible(true);
+    setHasFinished(false);
 
-    // Disparar si es primer ingreso o si se fuerza por registro reciente
-    if (!hasPlayed || triggerImmediately) {
-      setIsVisible(true);
-      // Intentar reproducción automática
-      const timer = setTimeout(() => {
+    // Intentar reproducir automáticamente después de una breve pausa de montaje
+    const timer = setTimeout(() => {
+      startAudioPlayback();
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [startAudioPlayback]);
+
+  // 2. DISPARADOR AL ACTIVAR / VOLVER A LA PESTAÑA O DESBLOQUEAR EL CELULAR
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Al regresar a la pestaña o reactivar la app, si no está sonando se activa
+        if (!audioInstanceRef.current || audioInstanceRef.current.paused) {
+          setIsVisible(true);
+          startAudioPlayback();
+        }
+      }
+    };
+
+    const handleWindowFocus = () => {
+      if (!audioInstanceRef.current || audioInstanceRef.current.paused) {
+        setIsVisible(true);
         startAudioPlayback();
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [userId, triggerImmediately]);
+      }
+    };
 
-  // Listener para poder disparar el audio manualmente desde cualquier botón
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleWindowFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleWindowFocus);
+    };
+  }, [startAudioPlayback]);
+
+  // 3. DESBLOQUEO INMEDIATO ANTE CUALQUIER PRIMER TOQUE SI EL NAVEGADOR BLOQUEÓ EL AUTOPLAY DIRECTO
+  useEffect(() => {
+    const handleFirstUserInteraction = () => {
+      if (isAutoplayBlocked || (audioInstanceRef.current && audioInstanceRef.current.paused && !hasFinished)) {
+        startAudioPlayback();
+      }
+    };
+
+    window.addEventListener('click', handleFirstUserInteraction, { once: true });
+    window.addEventListener('touchstart', handleFirstUserInteraction, { once: true });
+    window.addEventListener('keydown', handleFirstUserInteraction, { once: true });
+
+    return () => {
+      window.removeEventListener('click', handleFirstUserInteraction);
+      window.removeEventListener('touchstart', handleFirstUserInteraction);
+      window.removeEventListener('keydown', handleFirstUserInteraction);
+    };
+  }, [isAutoplayBlocked, hasFinished, startAudioPlayback]);
+
+  // 4. Listener para poder disparar el audio manualmente desde cualquier componente
   useEffect(() => {
     const handleCustomTrigger = () => {
       setIsVisible(true);
@@ -138,7 +192,7 @@ export const WelcomeAudioBanner: React.FC<WelcomeAudioBannerProps> = ({
     return () => {
       window.removeEventListener('play_bianka_welcome_audio', handleCustomTrigger);
     };
-  }, []);
+  }, [startAudioPlayback]);
 
   // Cleanup al desmontar
   useEffect(() => {
@@ -181,7 +235,7 @@ export const WelcomeAudioBanner: React.FC<WelcomeAudioBannerProps> = ({
                   </span>
                 </div>
                 <p className="text-xs sm:text-sm font-semibold text-white mt-1 group-hover:text-[#5EEAD4] transition-colors leading-snug">
-                  ✨ Toca aquí para escuchar el mensaje de bienvenida de Bianka 💚
+                  ✨ Toca aquí para escuchar el audio de ColShopi App y Bianka 💚
                 </p>
               </div>
             </div>
