@@ -16,7 +16,22 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
     return null;
   }
   try {
+    // Purge outdated legacy caches from previous versions
+    if ('caches' in window) {
+      caches.keys().then((keys) => {
+        keys.forEach((key) => {
+          if (key === 'coliplus-30d-v1') {
+            caches.delete(key);
+          }
+        });
+      }).catch(() => {});
+    }
+
     const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    
+    // Proactively check for service worker updates on app load
+    reg.update().catch(() => {});
+
     return reg;
   } catch (err) {
     console.warn('Service Worker registration warning:', err);
