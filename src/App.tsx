@@ -34,13 +34,23 @@ const LOCAL_STORAGE_KEY = 'coliplus_profile_30d_v1';
 
 export default function App() {
   const [user, setUser] = useState<UserProfile | null>(() => {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return null;
+    try {
+      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object' && parsed.id) {
+          return {
+            ...parsed,
+            completedDays: Array.isArray(parsed.completedDays) ? parsed.completedDays : [],
+            checkIns: parsed.checkIns && typeof parsed.checkIns === 'object' ? parsed.checkIns : {},
+            symptoms: Array.isArray(parsed.symptoms) ? parsed.symptoms : [],
+            dayCompletedTimestamps: parsed.dayCompletedTimestamps && typeof parsed.dayCompletedTimestamps === 'object' ? parsed.dayCompletedTimestamps : {},
+            currentDay: typeof parsed.currentDay === 'number' && parsed.currentDay >= 1 && parsed.currentDay <= 30 ? parsed.currentDay : 1
+          };
+        }
       }
+    } catch (e) {
+      console.warn('Error reading stored user profile:', e);
     }
     return null;
   });

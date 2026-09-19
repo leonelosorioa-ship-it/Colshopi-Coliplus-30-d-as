@@ -61,7 +61,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({ isOpen, user, onClose })
 • WhatsApp: ${customerPhone || (user?.whatsapp || '')}
 • Ciudad: ${shippingCity}
 • Dirección: ${shippingAddress || 'A coordinar por WhatsApp'}
-• Código VIP: ${user?.vipCode || 'VIP-COLIFEM'}
+• Código VIP: ${user?.accessCode || user?.id || 'VIP-COLIFEM'}
 
 Quedo atenta para coordinar el despacho y método de pago (contraentrega/transferencia). ¡Muchas gracias!`
     );

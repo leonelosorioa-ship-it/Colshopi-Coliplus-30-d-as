@@ -57,7 +57,7 @@ export const ExecutiveEnergyChartPanel: React.FC<ExecutiveEnergyChartPanelProps>
     }, 600);
   };
 
-  const completedCount = user.completedDays.length;
+  const completedCount = user.completedDays ? user.completedDays.length : 0;
   const adherenceRate = Math.min(100, Math.round((completedCount / user.currentDay) * 100)) || 100;
 
   return (
