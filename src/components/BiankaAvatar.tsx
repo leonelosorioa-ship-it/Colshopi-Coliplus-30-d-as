@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Camera } from 'lucide-react';
 
 interface BiankaAvatarProps {
   id?: string;
@@ -9,12 +10,8 @@ interface BiankaAvatarProps {
   interactive?: boolean;
 }
 
-const STATIC_IMAGE_SOURCES = [
-  '/Bianka en Circulo.jpg',
-  '/bianka.jpg',
-  '/bianka.png',
-  '/api/avatar'
-];
+const DEFAULT_LOCAL_AVATAR = '/Bianka en Circulo.jpg';
+const CDN_FALLBACK_AVATAR = 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&h=600&q=80';
 
 export const BiankaAvatar: React.FC<BiankaAvatarProps> = ({
   id,
@@ -28,6 +25,7 @@ export const BiankaAvatar: React.FC<BiankaAvatarProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imageFailed, setImageFailed] = useState<boolean>(false);
   const [serverAvatarUrl, setServerAvatarUrl] = useState<string | null>(null);
+  const [fallbackAttempted, setFallbackAttempted] = useState<boolean>(false);
   const [customAvatar, setCustomAvatar] = useState<string | null>(() => {
     try {
       const stored = localStorage.getItem('bianka_avatar_custom');
@@ -49,6 +47,7 @@ export const BiankaAvatar: React.FC<BiankaAvatarProps> = ({
         if (stored && stored.length > 200) {
           setCustomAvatar(stored);
           setImageFailed(false);
+          setFallbackAttempted(false);
         }
       } catch (e) {
         console.error('Error reading custom avatar:', e);
@@ -73,20 +72,33 @@ export const BiankaAvatar: React.FC<BiankaAvatarProps> = ({
     }
   }, [customAvatar, src]);
 
-  // Priority: 1) explicit src prop -> 2) valid custom avatar in localStorage -> 3) server avatar if present -> null (triggers high-fidelity SVG)
-  const activeSrc = src || customAvatar || serverAvatarUrl;
+  // Determine active source
+  const getActiveSrc = () => {
+    if (src) return src;
+    if (customAvatar) return customAvatar;
+    if (serverAvatarUrl) return serverAvatarUrl;
+    if (!fallbackAttempted) return DEFAULT_LOCAL_AVATAR;
+    return CDN_FALLBACK_AVATAR;
+  };
+
+  const activeSrc = getActiveSrc();
 
   const handleImageError = () => {
-    if (customAvatar && activeSrc === customAvatar) {
-      try {
-        localStorage.removeItem('bianka_avatar_custom');
-      } catch {}
-      setCustomAvatar(null);
+    if (!fallbackAttempted) {
+      // First try the CDN fallback
+      setFallbackAttempted(true);
+    } else {
+      if (customAvatar && activeSrc === customAvatar) {
+        try {
+          localStorage.removeItem('bianka_avatar_custom');
+        } catch {}
+        setCustomAvatar(null);
+      }
+      if (serverAvatarUrl && activeSrc === serverAvatarUrl) {
+        setServerAvatarUrl(null);
+      }
+      setImageFailed(true);
     }
-    if (serverAvatarUrl && activeSrc === serverAvatarUrl) {
-      setServerAvatarUrl(null);
-    }
-    setImageFailed(true);
   };
 
   const processFile = (file: File) => {
@@ -98,6 +110,7 @@ export const BiankaAvatar: React.FC<BiankaAvatarProps> = ({
         localStorage.setItem('bianka_avatar_custom', base64);
         setCustomAvatar(base64);
         setImageFailed(false);
+        setFallbackAttempted(false);
         window.dispatchEvent(new Event('bianka_avatar_updated'));
 
         await fetch('/api/upload-avatar', {
@@ -123,7 +136,7 @@ export const BiankaAvatar: React.FC<BiankaAvatarProps> = ({
     e.preventDefault();
   };
 
-  const handleDoubleClick = () => {
+  const handleClick = () => {
     if (interactive && fileInputRef.current) {
       fileInputRef.current.click();
     }
@@ -139,12 +152,19 @@ export const BiankaAvatar: React.FC<BiankaAvatarProps> = ({
       id={id}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
-      onDoubleClick={handleDoubleClick}
-      className={`relative inline-flex items-center justify-center shrink-0 rounded-full overflow-hidden border-2 border-[#38BDF8] shadow-md bg-[#131F2B] select-none ${className}`}
+      onClick={handleClick}
+      role={interactive ? 'button' : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      onKeyDown={(e) => {
+        if (interactive && (e.key === 'Enter' || e.key === ' ')) {
+          handleClick();
+        }
+      }}
+      className={`group relative inline-flex items-center justify-center shrink-0 rounded-full overflow-hidden border-2 border-[#38BDF8] shadow-md bg-[#131F2B] select-none ${interactive ? 'cursor-pointer' : ''} ${className}`}
       style={{ width: dimension, height: dimension }}
-      title="Bianka - Guía Oficial de Bienestar ColShopi Tienda"
+      title={interactive ? 'Haz clic para actualizar la foto de Bianka' : 'Bianka - Guía Oficial de Bienestar ColShopi Tienda'}
     >
-      {/* Hidden file picker allowing fast owner updates by double-clicking or dragging */}
+      {/* Hidden file picker allowing fast owner updates by clicking or dragging */}
       <input
         ref={fileInputRef}
         type="file"
@@ -159,7 +179,7 @@ export const BiankaAvatar: React.FC<BiankaAvatarProps> = ({
           src={activeSrc}
           alt="Bianka - Guía de Bienestar ColShopi"
           referrerPolicy="no-referrer"
-          className="w-full h-full object-cover rounded-full pointer-events-none"
+          className="w-full h-full object-cover rounded-full pointer-events-none transition-transform duration-300 group-hover:scale-105"
           onError={handleImageError}
         />
       ) : (
@@ -561,6 +581,14 @@ export const BiankaAvatar: React.FC<BiankaAvatarProps> = ({
             <ellipse cx="360" cy="415" rx="16" ry="12" fill="url(#skinTone)" />
           </g>
         </svg>
+      )}
+
+      {/* Interactive Camera Overlay on Hover */}
+      {interactive && (
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center text-white pointer-events-none">
+          <Camera className="w-4 h-4 text-white drop-shadow-sm mb-0.5" />
+          <span className="text-[9px] font-bold tracking-tight text-white drop-shadow-sm">Cambiar</span>
+        </div>
       )}
 
       {/* Online Status Dot */}
