@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Save, CheckCircle2, Droplets, Flame, BatteryCharging, AlertCircle, Info, Sparkles } from 'lucide-react';
+import { Save, CheckCircle2, Droplets, Flame, BatteryCharging, AlertCircle, Info, Sparkles, Clock, Lock, Zap } from 'lucide-react';
 import { CheckInRecord, UserProfile } from '../types';
 import { BRISTOL_SCALE } from '../data/bristolData';
+import { getChronologicalStatus } from '../utils/chronologicalCycle';
 
 interface DailyTrackerProps {
   user: UserProfile;
@@ -17,9 +18,17 @@ export const DailyTracker: React.FC<DailyTrackerProps> = ({
   onViewCharts
 }) => {
   const [day, setDay] = useState(selectedDay || user.currentDay || 1);
+  const [demoMode, setDemoMode] = useState(false);
+
+  // Real-time 1-second ticker for 24h countdown
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Form State initialized from existing check-in or defaults
-  const existingCheckIn = user.checkIns[day];
+  const existingCheckIn = user.checkIns ? user.checkIns[day] : undefined;
 
   const [tookSupplement, setTookSupplement] = useState<boolean>(existingCheckIn?.tookSupplement ?? true);
   const [waterLiters, setWaterLiters] = useState<number>(existingCheckIn?.waterLiters ?? 2.0);
@@ -32,7 +41,7 @@ export const DailyTracker: React.FC<DailyTrackerProps> = ({
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
-    const c = user.checkIns[day];
+    const c = user.checkIns ? user.checkIns[day] : undefined;
     if (c) {
       setTookSupplement(c.tookSupplement);
       setWaterLiters(c.waterLiters);
@@ -55,7 +64,16 @@ export const DailyTracker: React.FC<DailyTrackerProps> = ({
     setSaveSuccess(false);
   }, [day, user]);
 
+  // Chronological Cycle Status
+  const cycleStatus = getChronologicalStatus(user, demoMode, now);
+  const isDayAlreadyCompleted = user.completedDays ? user.completedDays.includes(day) : false;
+  const isDayWaiting24h = !isDayAlreadyCompleted && day === cycleStatus.nextDayNumber && cycleStatus.isNextDayWaiting && !demoMode;
+  const isDayLockedFuture = !demoMode && !isDayAlreadyCompleted && day > cycleStatus.nextDayNumber;
+  const isRegistrationBlocked = isDayWaiting24h || isDayLockedFuture;
+
   const handleSave = () => {
+    if (isRegistrationBlocked) return;
+
     const record: CheckInRecord = {
       date: new Date().toISOString().split('T')[0],
       tookSupplement,
@@ -65,7 +83,8 @@ export const DailyTracker: React.FC<DailyTrackerProps> = ({
       energyScore,
       digestionType,
       bristolType,
-      notes
+      notes,
+      registeredAt: Date.now()
     };
 
     onSaveCheckIn(day, record);
@@ -88,13 +107,13 @@ export const DailyTracker: React.FC<DailyTrackerProps> = ({
             Registro Diario de Síntomas
           </h1>
           <p className="text-xs text-[#64748B] mt-1">
-            Monitorea tu distensión, consistencia en Escala de Bristol y niveles de energía vital.
+            Monitorea tu distensión, consistencia en Escala de Bristol y niveles de energía vital en tu ciclo de 30 días.
           </p>
         </div>
 
         <div className="flex items-center space-x-3 w-full sm:w-auto">
           <div className="flex items-center space-x-2">
-            <label className="text-xs font-bold text-[#475569]">Día a registrar:</label>
+            <label className="text-xs font-bold text-[#475569]">Día:</label>
             <select
               value={day}
               onChange={(e) => setDay(Number(e.target.value))}
@@ -102,7 +121,7 @@ export const DailyTracker: React.FC<DailyTrackerProps> = ({
             >
               {Array.from({ length: 30 }, (_, i) => i + 1).map((d) => (
                 <option key={d} value={d}>
-                  Día {d} {user.checkIns[d] ? '✓' : ''}
+                  Día {d} {user.completedDays?.includes(d) ? '✓ Completado' : (d === cycleStatus.nextDayNumber && cycleStatus.isNextDayWaiting) ? '⏳ En Espera (24h)' : ''}
                 </option>
               ))}
             </select>
@@ -117,8 +136,70 @@ export const DailyTracker: React.FC<DailyTrackerProps> = ({
         </div>
       </div>
 
+      {/* 24-HOUR COUNTDOWN BANNER IF CURRENT SELECTED DAY IS IN WAITING / ASSIMILATION */}
+      {isDayWaiting24h && (
+        <div className="p-5 rounded-3xl bg-linear-to-r from-[#FFFBEB] via-[#FEF3C7] to-[#FDE68A] border-2 border-[#F59E0B] shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-start space-x-3 text-[#92400E]">
+            <div className="w-10 h-10 rounded-2xl bg-white border border-[#F59E0B]/50 flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+              <Clock className="w-5 h-5 text-[#D97706] animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="text-[10px] uppercase tracking-wider font-black px-2 py-0.5 rounded-full bg-[#D97706] text-white">
+                  Ciclo de 24 Horas Activo
+                </span>
+                <span className="text-xs font-bold text-[#92400E]">
+                  Día {cycleStatus.maxCompletedDay} Registrado con éxito ✓
+                </span>
+              </div>
+              <h3 className="text-base font-extrabold text-[#78350F] mt-1">
+                Día {day} en Asimilación Digestiva (24 Horas)
+              </h3>
+              <p className="text-xs text-[#92400E] mt-0.5 max-w-xl leading-relaxed">
+                El registro del Día {day} no se habilitará hasta que el reloj de 24 horas llegue a cero, garantizando el uso cronológico y ordenado de todo tu ciclo de 30 días.
+              </p>
+            </div>
+          </div>
+
+          {/* Large Countdown Clock Box */}
+          <div className="bg-white/95 px-5 py-3 rounded-2xl border-2 border-[#F59E0B] text-center shadow-xs w-full md:w-auto shrink-0">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#92400E]">
+              Habilitación en:
+            </div>
+            <div className="font-mono text-2xl sm:text-3xl font-black text-[#B45309] tracking-widest my-0.5">
+              {cycleStatus.formattedTime}
+            </div>
+            <div className="flex justify-center items-center space-x-2 text-[9px] text-[#A16207] font-semibold uppercase">
+              <span>{cycleStatus.hours}h</span>
+              <span>:</span>
+              <span>{cycleStatus.minutes}m</span>
+              <span>:</span>
+              <span>{cycleStatus.seconds}s</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Warning banner if selected day is locked because previous days are not done */}
+      {isDayLockedFuture && (
+        <div className="p-4 rounded-2xl bg-[#F8FAFC] border-2 border-slate-300 text-slate-700 flex items-center justify-between gap-3 text-xs">
+          <div className="flex items-center space-x-2">
+            <Lock className="w-5 h-5 text-slate-400 shrink-0" />
+            <span>
+              <strong>Día {day} Bloqueado:</strong> Para mantener la secuencia cronológica de 30 días, debes completar primero el <strong>Día {cycleStatus.nextDayNumber}</strong>.
+            </span>
+          </div>
+          <button
+            onClick={() => setDay(cycleStatus.nextDayNumber)}
+            className="px-3 py-1.5 rounded-lg bg-[#0F766E] text-white font-bold text-xs hover:bg-[#115E59] whitespace-nowrap cursor-pointer"
+          >
+            Ir al Día {cycleStatus.nextDayNumber} →
+          </button>
+        </div>
+      )}
+
       {/* Main Form Blocks */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#E2E8F0] shadow-sm space-y-8">
+      <div className={`bg-white rounded-3xl p-6 sm:p-8 border border-[#E2E8F0] shadow-sm space-y-8 ${isRegistrationBlocked ? 'opacity-90' : ''}`}>
         
         {/* Row 1: Habit Checkers (ColiFem, Water, Clean Meal) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -425,16 +506,63 @@ export const DailyTracker: React.FC<DailyTrackerProps> = ({
                 ¡Chequeo del Día {day} guardado con éxito!
               </span>
             )}
+            {isDayWaiting24h && (
+              <div className="flex items-center space-x-2 text-xs font-bold text-[#B45309]">
+                <Clock className="w-4 h-4 text-[#D97706] animate-pulse" />
+                <span>En espera de asimilación (24h): Desbloquea en {cycleStatus.formattedTime}</span>
+              </div>
+            )}
+            {isDayLockedFuture && (
+              <div className="flex items-center space-x-2 text-xs font-bold text-slate-500">
+                <Lock className="w-4 h-4 text-slate-400" />
+                <span>Completa primero el Día {cycleStatus.nextDayNumber}</span>
+              </div>
+            )}
           </div>
 
-          <button
-            id="btn-save-checkin"
-            onClick={handleSave}
-            className="w-full sm:w-auto px-8 py-3 rounded-xl bg-linear-to-r from-[#0F766E] to-[#10B981] text-white font-bold text-sm hover:opacity-95 transition-all shadow-md flex items-center justify-center space-x-2"
-          >
-            <Save className="w-4 h-4" />
-            <span>Guardar Chequeo de Síntomas</span>
-          </button>
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+            {isRegistrationBlocked && (
+              <button
+                type="button"
+                onClick={() => setDemoMode(true)}
+                className="w-full sm:w-auto px-3 py-2 rounded-xl border border-[#CBD5E1] text-[#64748B] hover:text-[#0F172A] font-bold text-xs flex items-center justify-center space-x-1 cursor-pointer"
+                title="Permite omitir la espera de 24h para demostración"
+              >
+                <Zap className="w-3.5 h-3.5 text-[#D97706]" />
+                <span>Omitir Espera (Demo)</span>
+              </button>
+            )}
+
+            <button
+              id="btn-save-checkin"
+              onClick={handleSave}
+              disabled={isRegistrationBlocked}
+              className={`w-full sm:w-auto px-8 py-3 rounded-xl font-bold text-sm transition-all shadow-md flex items-center justify-center space-x-2 ${
+                isDayWaiting24h
+                  ? 'bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A] cursor-not-allowed opacity-90'
+                  : isDayLockedFuture
+                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  : 'bg-linear-to-r from-[#0F766E] to-[#10B981] text-white hover:opacity-95 cursor-pointer'
+              }`}
+            >
+              {isDayWaiting24h ? (
+                <>
+                  <Clock className="w-4 h-4 text-[#D97706] animate-pulse" />
+                  <span>Esperando 24 Horas ({cycleStatus.formattedTime})</span>
+                </>
+              ) : isDayLockedFuture ? (
+                <>
+                  <Lock className="w-4 h-4 text-slate-400" />
+                  <span>Día Bloqueado</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>Guardar Chequeo de Síntomas</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
       </div>

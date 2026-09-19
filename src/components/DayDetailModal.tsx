@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Volume2, Square, CheckCircle, Circle, Sparkles, BookOpen, Utensils, Check, Pill, Droplet } from 'lucide-react';
+import { X, CheckCircle, Circle, Sparkles, BookOpen, Utensils, Check, Pill, Droplet, Clock, Lock, Zap } from 'lucide-react';
 import { DayPlan, UserProfile } from '../types';
-import { biankaVoice } from '../utils/speechHelper';
+import { getChronologicalStatus } from '../utils/chronologicalCycle';
 
 interface DayDetailModalProps {
   dayPlan: DayPlan | null;
@@ -21,28 +21,39 @@ export const DayDetailModal: React.FC<DayDetailModalProps> = ({
   onOpenTracker,
   onOpenRecipe
 }) => {
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [completedTaskIds, setCompletedTaskIds] = useState<string[]>([]);
+  const [demoMode, setDemoMode] = useState(false);
+
+  // 1-second ticker for real-time countdown
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (dayPlan) {
       // Check if tasks were completed in state or mark all if day already completed
-      const isDayDone = user.completedDays.includes(dayPlan.day);
+      const isDayDone = user.completedDays ? user.completedDays.includes(dayPlan.day) : false;
       if (isDayDone) {
         setCompletedTaskIds(dayPlan.tasks.map(t => t.id));
       } else {
         setCompletedTaskIds([]);
       }
-      setIsPlayingAudio(false);
-      biankaVoice.stop();
     }
   }, [dayPlan, user]);
 
   if (!dayPlan) return null;
 
-  const isDayCompleted = user.completedDays.includes(dayPlan.day);
+  const cycleStatus = getChronologicalStatus(user, demoMode, now);
+  const isDayCompleted = user.completedDays ? user.completedDays.includes(dayPlan.day) : false;
+  const isDayWaiting24h = !isDayCompleted && dayPlan.day === cycleStatus.nextDayNumber && cycleStatus.isNextDayWaiting && !demoMode;
+  const isDayLockedFuture = !demoMode && !isDayCompleted && dayPlan.day > cycleStatus.nextDayNumber;
+  const isActionBlocked = isDayWaiting24h || isDayLockedFuture;
 
   const toggleTask = (taskId: string) => {
+    if (isActionBlocked) return;
+
     let updated: string[];
     if (completedTaskIds.includes(taskId)) {
       updated = completedTaskIds.filter(id => id !== taskId);
@@ -57,22 +68,8 @@ export const DayDetailModal: React.FC<DayDetailModalProps> = ({
     }
   };
 
-  const handleToggleAudio = () => {
-    if (isPlayingAudio) {
-      biankaVoice.stop();
-      setIsPlayingAudio(false);
-    } else {
-      setIsPlayingAudio(true);
-      biankaVoice.speak(
-        dayPlan.marieAudioText,
-        () => setIsPlayingAudio(true),
-        () => setIsPlayingAudio(false),
-        () => setIsPlayingAudio(false)
-      );
-    }
-  };
-
   const handleCompleteButtonClick = () => {
+    if (isActionBlocked && !isDayCompleted) return;
     onCompleteDay(dayPlan.day, !isDayCompleted);
   };
 
@@ -101,11 +98,8 @@ export const DayDetailModal: React.FC<DayDetailModalProps> = ({
           </div>
 
           <button
-            onClick={() => {
-              biankaVoice.stop();
-              onClose();
-            }}
-            className="p-2 rounded-xl text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors"
+            onClick={onClose}
+            className="p-2 rounded-xl text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -114,56 +108,39 @@ export const DayDetailModal: React.FC<DayDetailModalProps> = ({
         {/* Modal Content */}
         <div className="p-5 sm:p-6 space-y-6 max-h-[75vh] overflow-y-auto">
           
-          {/* Bianka Voice Audio Coaching Card */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-linear-to-r from-[#ECFDF5] to-[#F0FDF4] border border-[#A7F3D0] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-11 h-11 rounded-2xl bg-white shadow-xs border border-[#A7F3D0] flex items-center justify-center font-bold text-[#0F766E] text-sm">
-                🌿
-              </div>
-              <div>
-                <div className="flex items-center space-x-2">
-                  <h4 className="text-xs font-bold text-[#065F46] uppercase tracking-wider">
-                    Audio-Guía Diaria con Bianka 💚
-                  </h4>
-                  {isPlayingAudio && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#10B981] text-white animate-pulse">
-                      Reproduciendo
-                    </span>
-                  )}
+          {/* 24h Countdown Alert Banner inside Modal */}
+          {isDayWaiting24h && (
+            <div className="p-4 rounded-2xl bg-linear-to-r from-[#FFFBEB] to-[#FEF3C7] border-2 border-[#F59E0B] flex items-center justify-between gap-3 text-xs text-[#92400E]">
+              <div className="flex items-center space-x-2.5">
+                <Clock className="w-5 h-5 text-[#D97706] shrink-0 animate-pulse" />
+                <div>
+                  <div className="font-extrabold text-[#78350F]">En proceso de asimilación digestiva (24h)</div>
+                  <div className="text-[11px] text-[#B45309]">Para un ciclo cronológico de 30 días, este día se activará en:</div>
                 </div>
-                <p className="text-xs text-[#047857] mt-0.5">
-                  Consejos prácticos de hábitos, bienestar y digestión ligera con ColShopi.
-                </p>
+              </div>
+              <div className="font-mono text-base font-black text-[#B45309] bg-white px-3 py-1 rounded-xl border border-[#FDE68A] shrink-0 shadow-2xs">
+                {cycleStatus.formattedTime}
               </div>
             </div>
+          )}
 
-            <button
-              id="btn-play-bianka-audio"
-              onClick={handleToggleAudio}
-              className={`px-4 py-2 rounded-xl font-bold text-xs flex items-center space-x-2 transition-all shadow-xs ${
-                isPlayingAudio
-                  ? 'bg-[#DC2626] text-white hover:bg-[#B91C1C]'
-                  : 'bg-[#0F766E] text-white hover:bg-[#115E59]'
-              }`}
-            >
-              {isPlayingAudio ? (
-                <>
-                  <Square className="w-3.5 h-3.5" />
-                  <span>Detener Audio</span>
-                </>
-              ) : (
-                <>
-                  <Volume2 className="w-4 h-4" />
-                  <span>Escuchar a Bianka 💚</span>
-                </>
-              )}
-            </button>
-          </div>
+          {/* Locked Future Day Banner */}
+          {isDayLockedFuture && (
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center space-x-3 text-xs text-slate-600">
+              <Lock className="w-4 h-4 text-slate-400 shrink-0" />
+              <div>
+                <strong>Día Bloqueado:</strong> Para garantizar el uso cronológico y ordenado de tu ciclo, completa primero el <strong>Día {cycleStatus.nextDayNumber}</strong>.
+              </div>
+            </div>
+          )}
 
-          {/* Bianka Quote Box */}
-          <div className="bg-[#FAF6F0] p-4 rounded-2xl border-l-4 border-[#0F766E] italic text-xs text-[#334155] leading-relaxed">
-            "{dayPlan.marieQuote}"
-          </div>
+          {/* Bianka Quote / Mensaje Diario (solo si existe y tiene contenido) */}
+          {dayPlan.biankaQuote && dayPlan.biankaQuote.trim() !== '' && (
+            <div className="bg-[#FAF6F0] p-4 rounded-2xl border-l-4 border-[#0F766E] italic text-xs text-[#334155] leading-relaxed flex items-start space-x-2.5">
+              <span className="text-base not-italic leading-none">🌿</span>
+              <span>"{dayPlan.biankaQuote}"</span>
+            </div>
+          )}
 
           {/* Supplement Dosage Guideline */}
           <div className="p-3.5 rounded-2xl bg-[#F0FDF4] border border-[#BBF7D0] flex items-start space-x-3">
@@ -261,27 +238,65 @@ export const DayDetailModal: React.FC<DayDetailModalProps> = ({
 
         {/* Modal Footer Actions */}
         <div className="p-4 sm:p-5 bg-[#FAF6F0] border-t border-[#E2E8F0] flex flex-col sm:flex-row items-center justify-between gap-3">
-          <button
-            onClick={() => {
-              onOpenTracker(dayPlan.day);
-              onClose();
-            }}
-            className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[#CBD5E1] bg-white hover:bg-[#F8FAFC] text-[#334155] text-xs font-bold transition-colors shadow-xs"
-          >
-            Registrar Síntomas en Tracker →
-          </button>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <button
+              onClick={() => {
+                onOpenTracker(dayPlan.day);
+                onClose();
+              }}
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[#CBD5E1] bg-white hover:bg-[#F8FAFC] text-[#334155] text-xs font-bold transition-colors shadow-xs"
+            >
+              {isActionBlocked ? 'Ver Tracker de Síntomas →' : 'Registrar Síntomas en Tracker →'}
+            </button>
+
+            {isActionBlocked && (
+              <button
+                type="button"
+                onClick={() => setDemoMode(true)}
+                className="px-3 py-2 rounded-xl border border-[#F59E0B] bg-[#FEF3C7] text-[#92400E] font-bold text-xs hover:bg-[#FDE68A] transition-colors whitespace-nowrap flex items-center gap-1"
+                title="Permite omitir la espera de 24h para demostración"
+              >
+                <Zap className="w-3.5 h-3.5 text-[#D97706]" />
+                <span>Demo</span>
+              </button>
+            )}
+          </div>
 
           <button
             id="btn-mark-day-complete"
             onClick={handleCompleteButtonClick}
+            disabled={isActionBlocked && !isDayCompleted}
             className={`w-full sm:w-auto px-6 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all shadow-xs ${
               isDayCompleted
-                ? 'bg-[#10B981] text-white hover:bg-[#059669]'
-                : 'bg-[#0F766E] text-white hover:bg-[#115E59]'
+                ? 'bg-[#10B981] text-white hover:bg-[#059669] cursor-pointer'
+                : isDayWaiting24h
+                ? 'bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A] cursor-not-allowed'
+                : isDayLockedFuture
+                ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                : 'bg-[#0F766E] text-white hover:bg-[#115E59] cursor-pointer'
             }`}
           >
-            <Check className="w-4 h-4" />
-            <span>{isDayCompleted ? 'Día Marcado como Completado ✓' : 'Marcar Día como Completado'}</span>
+            {isDayCompleted ? (
+              <>
+                <Check className="w-4 h-4" />
+                <span>Día Marcado como Completado ✓</span>
+              </>
+            ) : isDayWaiting24h ? (
+              <>
+                <Clock className="w-4 h-4 text-[#D97706] animate-pulse" />
+                <span>Esperando 24 Horas ({cycleStatus.formattedTime})</span>
+              </>
+            ) : isDayLockedFuture ? (
+              <>
+                <Lock className="w-4 h-4 text-slate-400" />
+                <span>Día Bloqueado (Completa Día {cycleStatus.nextDayNumber})</span>
+              </>
+            ) : (
+              <>
+                <Check className="w-4 h-4" />
+                <span>Marcar Día como Completado</span>
+              </>
+            )}
           </button>
         </div>
 

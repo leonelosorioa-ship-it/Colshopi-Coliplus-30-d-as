@@ -25,7 +25,6 @@ import { SixDigitInput } from './SixDigitInput';
 
 interface OnboardingQuizProps {
   onComplete: (profile: UserProfile) => void;
-  onOpenAdmin?: () => void;
   onInstallPWA?: () => void;
 }
 
@@ -77,7 +76,6 @@ const COMMON_SYMPTOMS = [
 
 export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({
   onComplete,
-  onOpenAdmin,
   onInstallPWA
 }) => {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -239,10 +237,11 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({
                 <button
                   type="button"
                   onClick={onInstallPWA}
-                  className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-lg bg-[#1E293B] hover:bg-[#334155] text-white text-[11px] font-semibold border border-[#475569]/40 transition-colors"
+                  className="inline-flex items-center px-2.5 py-1 rounded-lg bg-[#1E293B] hover:bg-[#334155] text-[#38BDF8] hover:text-white text-[11px] font-semibold border border-[#38BDF8]/40 transition-colors cursor-pointer"
+                  title="Instalar App en tu celular, tablet o PC"
                 >
                   <Download className="w-3 h-3 mr-1 text-[#38BDF8]" />
-                  Instalar
+                  <span>Instalar App</span>
                 </button>
               )}
               <div className="text-[11px] font-mono font-bold text-[#38BDF8] bg-[#0F172A] px-2.5 py-1 rounded-lg border border-[#1E293B] shadow-inner">
@@ -726,25 +725,13 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({
         </div>
 
         {/* CARD FOOTER - Exactly like Portada TY */}
-        <div className="bg-[#FAF6F0] px-5 py-3.5 border-t border-[#E2E8F0] text-center space-y-1">
+        <div className="bg-[#FAF6F0] px-5 py-3.5 border-t border-[#E2E8F0] text-center">
           <p className="text-[11px] text-[#64748B] flex items-center justify-center flex-wrap gap-1 font-medium">
             <Lock className="w-3 h-3 text-[#0F766E] inline" />
             <span>Comunidad Exclusiva ColShopi Tienda By Leps Digital</span>
             <span>•</span>
             <span>Garantía & Registro INVIMA NSA-0012423-2022</span>
           </p>
-
-          {onOpenAdmin && (
-            <div>
-              <button
-                type="button"
-                onClick={onOpenAdmin}
-                className="text-[10px] text-[#94A3B8] hover:text-[#0F766E] transition-colors underline"
-              >
-                Acceso Administrativo ColShopi (contacto@colshopi.com)
-              </button>
-            </div>
-          )}
         </div>
 
       </div>

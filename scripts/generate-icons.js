@@ -1,5 +1,15 @@
+import sharp from 'sharp';
+import fs from 'fs';
+import path from 'path';
 
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+// Construct the high-fidelity SVG of "Nuevo Logo 2026 - Transparente"
+// Features:
+// - Double glowing cyan neon circles
+// - "Colshopi" in flowing 3D cyan script with glossy white reflections and dark dropshadow
+// - Horizontal cyan divider lines with "Tienda" in bold modern white caps
+// - "By Leps Digital" in cursive script with "By" in white and "Leps Digital" in electric cyan
+const createLogoSvg = (size = 512, withBackground = false) => `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="${size}" height="${size}">
   <defs>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Pacifico&amp;family=Montserrat:wght@800;900&amp;family=Caveat:wght@700&amp;display=swap');
@@ -41,9 +51,9 @@
 
     <!-- Radial & Linear Gradients -->
     <radialGradient id="badgeBg" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#071822" stop-opacity="0"/>
-      <stop offset="70%" stop-color="#05121b" stop-opacity="0"/>
-      <stop offset="100%" stop-color="#020a10" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#071822" stop-opacity="${withBackground ? '0.98' : '0'}"/>
+      <stop offset="70%" stop-color="#05121b" stop-opacity="${withBackground ? '0.99' : '0'}"/>
+      <stop offset="100%" stop-color="#020a10" stop-opacity="${withBackground ? '1' : '0'}"/>
     </radialGradient>
 
     <linearGradient id="cyanNeon" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -65,7 +75,7 @@
     </linearGradient>
   </defs>
 
-  
+  ${withBackground ? `<circle cx="256" cy="256" r="252" fill="url(#badgeBg)"/>` : ''}
 
   <!-- Double Circular Glowing Neon Rings -->
   <!-- Outer Ring -->
@@ -200,3 +210,75 @@
     </text>
   </g>
 </svg>
+`;
+
+async function generateAll() {
+  console.log('Generating ColShopi Tienda Logo Assets...');
+  const publicDir = path.resolve('public');
+  const distDir = path.resolve('dist');
+
+  // 1. Generate icon.svg with transparent background
+  const transparentSvg = createLogoSvg(512, false);
+  fs.writeFileSync(path.join(publicDir, 'icon.svg'), transparentSvg);
+
+  // 2. Generate maskable / mobile app icon with clean dark circular contrast background (#05121b)
+  // so on mobile/tablet/desktop launchers the icon is crisp, vivid and meets Android maskable safe zones
+  const appIconSvg = createLogoSvg(512, true);
+  fs.writeFileSync(path.join(publicDir, 'icon-badge.svg'), appIconSvg);
+
+  // 3. Render 512x512 PNG
+  const buf512 = await sharp(Buffer.from(appIconSvg))
+    .resize(512, 512)
+    .png({ quality: 100 })
+    .toBuffer();
+  fs.writeFileSync(path.join(publicDir, 'icon-512.png'), buf512);
+
+  // 4. Render 192x192 PNG
+  const buf192 = await sharp(Buffer.from(appIconSvg))
+    .resize(192, 192)
+    .png({ quality: 100 })
+    .toBuffer();
+  fs.writeFileSync(path.join(publicDir, 'icon-192.png'), buf192);
+
+  // 5. Render 180x180 Apple Touch Icon (iOS Safari)
+  const buf180 = await sharp(Buffer.from(appIconSvg))
+    .resize(180, 180)
+    .png({ quality: 100 })
+    .toBuffer();
+  fs.writeFileSync(path.join(publicDir, 'apple-touch-icon.png'), buf180);
+
+  // 6. Transparent logo PNG for in-app display (download modal, header, etc.)
+  const bufLogoTrans = await sharp(Buffer.from(transparentSvg))
+    .resize(512, 512)
+    .png({ quality: 100 })
+    .toBuffer();
+  fs.writeFileSync(path.join(publicDir, 'colshopi-logo.png'), bufLogoTrans);
+  fs.writeFileSync(path.join(publicDir, 'Nuevo Logo 2026 - Transparente.png'), bufLogoTrans);
+
+  // 7. Favicon PNG (48x48) & Favicon.ico
+  const bufFavicon = await sharp(Buffer.from(appIconSvg))
+    .resize(48, 48)
+    .png()
+    .toBuffer();
+  fs.writeFileSync(path.join(publicDir, 'favicon.png'), bufFavicon);
+  fs.writeFileSync(path.join(publicDir, 'favicon.ico'), bufFavicon);
+
+  // Also copy to dist if dist exists
+  if (fs.existsSync(distDir)) {
+    fs.copyFileSync(path.join(publicDir, 'icon-512.png'), path.join(distDir, 'icon-512.png'));
+    fs.copyFileSync(path.join(publicDir, 'icon-192.png'), path.join(distDir, 'icon-192.png'));
+    fs.copyFileSync(path.join(publicDir, 'apple-touch-icon.png'), path.join(distDir, 'apple-touch-icon.png'));
+    fs.copyFileSync(path.join(publicDir, 'colshopi-logo.png'), path.join(distDir, 'colshopi-logo.png'));
+    fs.copyFileSync(path.join(publicDir, 'Nuevo Logo 2026 - Transparente.png'), path.join(distDir, 'Nuevo Logo 2026 - Transparente.png'));
+    fs.copyFileSync(path.join(publicDir, 'icon.svg'), path.join(distDir, 'icon.svg'));
+    fs.copyFileSync(path.join(publicDir, 'favicon.ico'), path.join(distDir, 'favicon.ico'));
+    fs.copyFileSync(path.join(publicDir, 'favicon.png'), path.join(distDir, 'favicon.png'));
+  }
+
+  console.log('All icons generated successfully!');
+}
+
+generateAll().catch(err => {
+  console.error('Error generating icons:', err);
+  process.exit(1);
+});

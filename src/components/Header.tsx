@@ -10,8 +10,8 @@ import {
   MessageCircle,
   Smartphone,
   FileText,
-  KeyRound,
-  MessageSquareShare
+  MessageSquareShare,
+  Download
 } from 'lucide-react';
 import { UserProfile } from '../types';
 import { ColShopiLogo } from './ColShopiLogo';
@@ -21,7 +21,6 @@ interface HeaderProps {
   activeTab?: string;
   onTabChange?: (tab: any) => void;
   onOpenStore: () => void;
-  onOpenAdmin: () => void;
   onOpenProfile?: () => void;
   onOpenMilestone?: () => void;
   onTogglePush?: () => void;
@@ -36,13 +35,13 @@ export const Header: React.FC<HeaderProps> = ({
   activeTab = 'calendar',
   onTabChange,
   onOpenStore,
-  onOpenAdmin,
   onOpenProfile,
   onOpenMilestone,
   onInstallPWA
 }) => {
   const completedCount = user?.completedDays?.length || 0;
-  const currentDay = user?.currentDay || 1;
+  const maxCompleted = completedCount > 0 && user?.completedDays ? Math.max(...user.completedDays) : 0;
+  const currentDay = Math.min(30, maxCompleted + 1);
   const percentage = Math.min(100, Math.round((completedCount / 30) * 100));
 
   const navTabs = [
@@ -155,27 +154,20 @@ export const Header: React.FC<HeaderProps> = ({
               </>
             )}
 
-            {/* PWA Install Button (if available) */}
+            {/* PWA Install / Download Button (Prominent for logged-in and onboarding users) */}
             {onInstallPWA && (
               <button
                 id="btn-header-install"
                 onClick={onInstallPWA}
-                className="hidden sm:inline-flex p-1.5 sm:p-2 rounded-xl border border-[#CBD5E1] bg-white text-[#334155] hover:bg-[#F1F5F9] hover:text-[#0F766E] transition-colors shadow-2xs"
-                title="Instalar App en tu dispositivo"
+                className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl border border-[#00E5FF]/40 bg-gradient-to-r from-[#ECFEFF] to-[#E0F2FE] text-[#0E7490] hover:from-[#CFFAFE] hover:to-[#BAE6FD] hover:border-[#00E5FF]/70 transition-all shadow-xs cursor-pointer active:scale-95 group"
+                title="Descargar e Instalar ColiFem 30D en tu Celular, Tablet o PC"
               >
-                <Smartphone className="w-4 h-4" />
+                <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0891B2] group-hover:scale-110 transition-transform shrink-0" />
+                <span className="text-[11px] sm:text-xs font-bold text-[#0E7490] whitespace-nowrap">
+                  Descargar App
+                </span>
               </button>
             )}
-
-            {/* Admin Key Button */}
-            <button
-              id="btn-header-admin"
-              onClick={onOpenAdmin}
-              className="p-1.5 sm:p-2 rounded-xl text-[#94A3B8] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors"
-              title="Acceso Administrativo ColShopi (contacto@colshopi.com)"
-            >
-              <KeyRound className="w-4 h-4" />
-            </button>
           </div>
         </div>
 

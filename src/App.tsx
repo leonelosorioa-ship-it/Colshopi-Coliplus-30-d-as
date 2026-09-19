@@ -11,7 +11,8 @@ import {
   ShoppingBag,
   ShieldAlert,
   RotateCcw,
-  CheckCircle2
+  CheckCircle2,
+  Download
 } from 'lucide-react';
 import { UserProfile, DayPlan, CheckInRecord } from './types';
 import { COLIPLUS_30_DAYS } from './data/coliplusDaysData';
@@ -26,8 +27,9 @@ import { MarieChat } from './components/MarieChat';
 import { OrderModal } from './components/OrderModal';
 import { MilestoneModal } from './components/MilestoneModal';
 import { WelcomeAudioBanner } from './components/WelcomeAudioBanner';
-import { AdminPanel } from './components/AdminPanel';
+import { PWAInstallModal } from './components/PWAInstallModal';
 import { pwaManager } from './utils/pwaManager';
+import { getDayCompletionTimestamp, getChronologicalStatus } from './utils/chronologicalCycle';
 
 const LOCAL_STORAGE_KEY = 'coliplus_profile_30d_v1';
 
@@ -79,15 +81,15 @@ export default function App() {
 
   // Modals
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
-  const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [milestoneModal, setMilestoneModal] = useState<{ isOpen: boolean; day: number }>({
     isOpen: false,
     day: 15
   });
 
-  // Push notifications state
+  // Push notifications & PWA modal state
   const [isPushActive, setIsPushActive] = useState(false);
   const [pwaInstallPrompt, setPwaInstallPrompt] = useState<any>(null);
+  const [isPWAInstallModalOpen, setIsPWAInstallModalOpen] = useState(false);
 
   // PWA & Push initialization
   useEffect(() => {
@@ -144,35 +146,69 @@ export default function App() {
     }
   };
 
-  // Install PWA
-  const handleInstallPWA = async () => {
-    if (pwaInstallPrompt) {
-      pwaInstallPrompt.prompt();
-      const choice = await pwaInstallPrompt.userChoice;
-      if (choice.outcome === 'accepted') {
-        setPwaInstallPrompt(null);
+  // Install PWA (opens full modal with device instructions & native prompt)
+  const handleInstallPWA = () => {
+    setIsPWAInstallModalOpen(true);
+  };
+
+  // Auto-synchronize completion timestamps for 24h chronological cycle
+  useEffect(() => {
+    if (user && user.completedDays && user.completedDays.length > 0) {
+      let updated = false;
+      const newTimestamps = { ...(user.dayCompletedTimestamps || {}) };
+      for (const d of user.completedDays) {
+        if (!newTimestamps[d]) {
+          const stored = localStorage.getItem(`colifem_day_${d}_completed_timestamp`);
+          if (stored && parseInt(stored, 10) > 0) {
+            newTimestamps[d] = parseInt(stored, 10);
+          } else {
+            // Initialize with current timestamp so 24h countdown is immediately activated
+            const now = Date.now();
+            newTimestamps[d] = now;
+            try {
+              localStorage.setItem(`colifem_day_${d}_completed_timestamp`, now.toString());
+            } catch (e) {}
+          }
+          updated = true;
+        }
+      }
+      if (updated) {
+        setUser(prev => prev ? { ...prev, dayCompletedTimestamps: newTimestamps } : null);
       }
     }
-  };
+  }, [user?.completedDays]);
 
   // Handle Day Completion
   const handleCompleteDay = async (dayNumber: number, allTasksDone: boolean) => {
     if (!user) return;
 
     let updatedCompleted = [...user.completedDays];
+    let updatedTimestamps = { ...(user.dayCompletedTimestamps || {}) };
+    const nowTimestamp = Date.now();
+
     if (allTasksDone) {
       if (!updatedCompleted.includes(dayNumber)) {
         updatedCompleted.push(dayNumber);
       }
+      updatedTimestamps[dayNumber] = nowTimestamp;
+      try {
+        localStorage.setItem(`colifem_day_${dayNumber}_completed_timestamp`, nowTimestamp.toString());
+        localStorage.setItem('colifem_last_completed_timestamp', nowTimestamp.toString());
+      } catch (e) {}
     } else {
       updatedCompleted = updatedCompleted.filter(d => d !== dayNumber);
+      delete updatedTimestamps[dayNumber];
+      try {
+        localStorage.removeItem(`colifem_day_${dayNumber}_completed_timestamp`);
+      } catch (e) {}
     }
 
-    const nextCurrentDay = Math.min(30, Math.max(user.currentDay, dayNumber + 1));
+    const nextCurrentDay = Math.min(30, Math.max(...updatedCompleted, 0) + 1);
 
     const updatedUser: UserProfile = {
       ...user,
       completedDays: updatedCompleted,
+      dayCompletedTimestamps: updatedTimestamps,
       currentDay: nextCurrentDay,
       lastActive: new Date().toISOString()
     };
@@ -186,7 +222,8 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           currentDay: nextCurrentDay,
-          completedDays: updatedCompleted
+          completedDays: updatedCompleted,
+          dayCompletedTimestamps: updatedTimestamps
         })
       });
     } catch (e) {
@@ -206,9 +243,15 @@ export default function App() {
   const handleSaveCheckIn = async (dayNumber: number, record: CheckInRecord) => {
     if (!user) return;
 
+    const nowTimestamp = Date.now();
+    const updatedRecord: CheckInRecord = {
+      ...record,
+      registeredAt: nowTimestamp
+    };
+
     const updatedCheckIns = {
       ...user.checkIns,
-      [dayNumber]: record
+      [dayNumber]: updatedRecord
     };
 
     let updatedCompleted = [...user.completedDays];
@@ -216,10 +259,24 @@ export default function App() {
       updatedCompleted.push(dayNumber);
     }
 
+    const updatedTimestamps = {
+      ...(user.dayCompletedTimestamps || {}),
+      [dayNumber]: nowTimestamp
+    };
+
+    try {
+      localStorage.setItem(`colifem_day_${dayNumber}_completed_timestamp`, nowTimestamp.toString());
+      localStorage.setItem('colifem_last_completed_timestamp', nowTimestamp.toString());
+    } catch (e) {}
+
+    const nextCurrentDay = Math.min(30, Math.max(...updatedCompleted, 0) + 1);
+
     const updatedUser: UserProfile = {
       ...user,
       checkIns: updatedCheckIns,
       completedDays: updatedCompleted,
+      dayCompletedTimestamps: updatedTimestamps,
+      currentDay: nextCurrentDay,
       lastActive: new Date().toISOString()
     };
 
@@ -238,8 +295,9 @@ export default function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          checkIn: { day: dayNumber, record },
-          completedDays: updatedCompleted
+          checkIn: { day: dayNumber, record: updatedRecord },
+          completedDays: updatedCompleted,
+          dayCompletedTimestamps: updatedTimestamps
         })
       });
     } catch (e) {
@@ -273,7 +331,6 @@ export default function App() {
           if (tab !== 'recipes') setViewRecipeId(null);
         }}
         onOpenStore={() => setIsOrderModalOpen(true)}
-        onOpenAdmin={() => setIsAdminOpen(true)}
         onOpenMilestone={() => {
           const cDay = user?.currentDay || 10;
           const target = cDay >= 30 ? 30 : cDay >= 15 ? 15 : 10;
@@ -281,7 +338,7 @@ export default function App() {
         }}
         onTogglePush={handleTogglePush}
         isPushActive={isPushActive}
-        canInstallPWA={!!pwaInstallPrompt}
+        canInstallPWA={true}
         onInstallPWA={handleInstallPWA}
       />
 
@@ -309,7 +366,6 @@ export default function App() {
           /* ONBOARDING & VALIDATION FLOW - Matching Portada TY Home Screen */
           <OnboardingQuiz
             onComplete={handleOnboardingComplete}
-            onOpenAdmin={() => setIsAdminOpen(true)}
             onInstallPWA={handleInstallPWA}
           />
         ) : (
@@ -328,7 +384,17 @@ export default function App() {
                 </span>
               </div>
 
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 sm:space-x-3 flex-wrap gap-y-1">
+                <button
+                  id="btn-subbar-install-pwa"
+                  onClick={handleInstallPWA}
+                  className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-[#ECFEFF] text-[#0E7490] hover:bg-[#CFFAFE] border border-[#00E5FF]/30 font-bold text-[11px] transition-all cursor-pointer shadow-2xs active:scale-95"
+                  title="Descargar la app en tu celular, tablet o computador"
+                >
+                  <Download className="w-3.5 h-3.5 text-[#0891B2]" />
+                  <span>Descargar App</span>
+                </button>
+                <span className="hidden sm:inline">•</span>
                 <button
                   onClick={handleLoadDemo}
                   className="text-[11px] text-[#0F766E] hover:underline font-semibold cursor-pointer"
@@ -355,6 +421,7 @@ export default function App() {
                   setActiveTab('tracker');
                 }}
                 onOpenStore={() => setIsOrderModalOpen(true)}
+                onInstallPWA={handleInstallPWA}
               />
             )}
 
@@ -488,13 +555,15 @@ export default function App() {
         onOpenStore={() => setIsOrderModalOpen(true)}
       />
 
-      {/* 4. Super Administrator Console */}
-      <AdminPanel
-        isOpen={isAdminOpen}
-        onClose={() => setIsAdminOpen(false)}
+      {/* 4. PWA Direct Installation Modal */}
+      <PWAInstallModal
+        isOpen={isPWAInstallModalOpen}
+        onClose={() => setIsPWAInstallModalOpen(false)}
+        deferredPrompt={pwaInstallPrompt}
+        onInstallAccepted={() => setPwaInstallPrompt(null)}
       />
 
-      {/* 5. Welcome Audio Banner & Screen Wake Lock Controller */}
+      {/* 6. Welcome Audio Banner & Screen Wake Lock Controller */}
       {user && (
         <WelcomeAudioBanner
           userName={user.name}
