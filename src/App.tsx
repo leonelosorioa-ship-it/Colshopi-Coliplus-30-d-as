@@ -25,6 +25,7 @@ import { RecipeBook } from './components/RecipeBook';
 import { MarieChat } from './components/MarieChat';
 import { OrderModal } from './components/OrderModal';
 import { MilestoneModal } from './components/MilestoneModal';
+import { WelcomeAudioBanner } from './components/WelcomeAudioBanner';
 import { AdminPanel } from './components/AdminPanel';
 import { pwaManager } from './utils/pwaManager';
 
@@ -117,10 +118,13 @@ export default function App() {
     }
   }, [user]);
 
+  const [justCompletedOnboarding, setJustCompletedOnboarding] = useState(false);
+
   // Handle Onboarding Completion
   const handleOnboardingComplete = (newProfile: UserProfile) => {
     setUser(newProfile);
     setActiveTab('calendar');
+    setJustCompletedOnboarding(true);
   };
 
   // Toggle Push Notifications
@@ -189,8 +193,8 @@ export default function App() {
       console.warn('Backend sync fallback');
     }
 
-    // Check for celebration milestone (Day 15 or Day 30)
-    if (dayNumber === 15 || dayNumber === 30) {
+    // Check for celebration milestone (Day 10, Day 15 or Day 30)
+    if (dayNumber === 10 || dayNumber === 15 || dayNumber === 30) {
       setMilestoneModal({
         isOpen: true,
         day: dayNumber
@@ -220,6 +224,14 @@ export default function App() {
     };
 
     setUser(updatedUser);
+
+    // Trigger celebration milestone modal on check-in if Day 10, 15, or 30
+    if (dayNumber === 10 || dayNumber === 15 || dayNumber === 30) {
+      setMilestoneModal({
+        isOpen: true,
+        day: dayNumber
+      });
+    }
 
     try {
       await fetch(`/api/users/${user.id}/progress`, {
@@ -262,7 +274,11 @@ export default function App() {
         }}
         onOpenStore={() => setIsOrderModalOpen(true)}
         onOpenAdmin={() => setIsAdminOpen(true)}
-        onOpenMilestone={() => setMilestoneModal({ isOpen: true, day: user?.currentDay || 15 })}
+        onOpenMilestone={() => {
+          const cDay = user?.currentDay || 10;
+          const target = cDay >= 30 ? 30 : cDay >= 15 ? 15 : 10;
+          setMilestoneModal({ isOpen: true, day: target });
+        }}
         onTogglePush={handleTogglePush}
         isPushActive={isPushActive}
         canInstallPWA={!!pwaInstallPrompt}
@@ -477,6 +493,15 @@ export default function App() {
         isOpen={isAdminOpen}
         onClose={() => setIsAdminOpen(false)}
       />
+
+      {/* 5. Welcome Audio Banner & Screen Wake Lock Controller */}
+      {user && (
+        <WelcomeAudioBanner
+          userName={user.name}
+          userId={user.id}
+          triggerImmediately={justCompletedOnboarding}
+        />
+      )}
 
     </div>
   );

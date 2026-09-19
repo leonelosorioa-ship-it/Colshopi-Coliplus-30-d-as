@@ -183,7 +183,8 @@ export const COLIPLUS_30_DAYS: DayPlan[] = [
       { id: 'd10-t4', title: 'Hidratación con Rodajas de Limón', description: 'Agua fresca con limón para mejorar la palatabilidad.', type: 'hydration', completed: false }
     ],
     digestiveTip: 'El noni presente en Coli Plus ayuda a modular los receptores de serotonina en el plexo entérico.',
-    recommendedRecipeId: 'rec-9'
+    recommendedRecipeId: 'rec-9',
+    isMilestone: true
   },
   {
     day: 11,

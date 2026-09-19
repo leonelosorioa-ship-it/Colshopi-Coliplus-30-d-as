@@ -17,11 +17,20 @@ import {
   Key,
   Copy,
   Check,
-  Upload
+  Upload,
+  Volume2,
+  Play,
+  Pause,
+  Sun
 } from 'lucide-react';
 import { UserProfile } from '../types';
 import { SECRET_50_VIP_CODES, getClaimedCodes } from '../data/vipCodes';
 import { BiankaAvatar } from './BiankaAvatar';
+import {
+  BIANKA_AUDIO_ASSETS,
+  playBiankaAudio,
+  stopActiveBiankaAudio
+} from '../utils/biankaAudioPlayer';
 
 interface AdminPanelProps {
   isOpen: boolean;
@@ -48,8 +57,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAngleFilter, setSelectedAngleFilter] = useState('all');
 
-  // Admin Tab view: 'codes' | 'users' | 'metrics' | 'avatar'
-  const [adminTab, setAdminTab] = useState<'codes' | 'users' | 'metrics' | 'avatar'>('codes');
+  // Admin Tab view: 'codes' | 'users' | 'metrics' | 'avatar' | 'audios'
+  const [adminTab, setAdminTab] = useState<'codes' | 'users' | 'metrics' | 'avatar' | 'audios'>('codes');
+  const [playingAudioKey, setPlayingAudioKey] = useState<string | null>(null);
 
   // Avatar Management state
   const [avatarUploadStatus, setAvatarUploadStatus] = useState<string>('');
@@ -455,6 +465,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                   <Upload className="w-3.5 h-3.5 text-emerald-600" />
                   <span>Foto de Bianka</span>
                 </button>
+
+                <button
+                  type="button"
+                  id="btn-admin-tab-audios"
+                  onClick={() => setAdminTab('audios')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shrink-0 ${
+                    adminTab === 'audios'
+                      ? 'bg-[#0F766E] text-white shadow-xs'
+                      : 'bg-[#F1F5F9] text-[#475569] hover:bg-[#E2E8F0]'
+                  }`}
+                >
+                  <Volume2 className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Audios & Hitos</span>
+                </button>
               </div>
 
               {/* ================= TAB 4: FOTO OFICIAL DE BIANKA ================= */}
@@ -550,6 +574,303 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                   </div>
                 </div>
               )}
+              {/* ================= TAB 5: AUDIOS OFICIALES & HITOS DE BIANKA ================= */}
+              {adminTab === 'audios' && (
+                <div className="space-y-6">
+                  {/* Overview Card */}
+                  <div className="p-5 rounded-2xl bg-linear-to-r from-[#0F766E]/10 to-[#10B981]/10 border border-[#0F766E]/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <Volume2 className="w-5 h-5 text-[#0F766E]" />
+                        <h3 className="text-base font-bold text-[#0F172A]">
+                          Sistema de Audios Oficiales de Bianka & Hitos Interactivos
+                        </h3>
+                      </div>
+                      <p className="text-xs text-[#64748B] mt-1 max-w-2xl">
+                        Audios alojados en Backblaze B2 con Screen Wake Lock integrado (mantiene la pantalla encendida mientras se reproducen) y modales automáticos de recompensa.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0">
+                      <span className="inline-flex items-center px-3 py-1.5 rounded-xl bg-emerald-50 text-[#0F766E] border border-emerald-200 text-xs font-bold">
+                        <Sun className="w-3.5 h-3.5 text-amber-500 mr-1.5" />
+                        Wake Lock Activo
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Grid of Audios */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
+                    {/* 1. Audio Bienvenida */}
+                    <div className="bg-white p-5 rounded-2xl border border-[#E2E8F0] shadow-2xs space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-lg border border-emerald-200">
+                            📲
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                              Post-Registro / Primer Login
+                            </span>
+                            <h4 className="text-sm font-bold text-[#0F172A] mt-0.5">
+                              Audio de Bienvenida
+                            </h4>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (playingAudioKey === 'welcome') {
+                              stopActiveBiankaAudio();
+                              setPlayingAudioKey(null);
+                            } else {
+                              stopActiveBiankaAudio();
+                              setPlayingAudioKey('welcome');
+                              playBiankaAudio(BIANKA_AUDIO_ASSETS.WELCOME, {
+                                onEnded: () => setPlayingAudioKey(null),
+                                onError: () => setPlayingAudioKey(null)
+                              });
+                            }
+                          }}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all ${
+                            playingAudioKey === 'welcome'
+                              ? 'bg-red-500 text-white'
+                              : 'bg-[#10B981] hover:bg-[#059669] text-white'
+                          }`}
+                        >
+                          {playingAudioKey === 'welcome' ? (
+                            <>
+                              <Pause className="w-3.5 h-3.5" />
+                              <span>Pausar</span>
+                            </>
+                          ) : (
+                            <>
+                              <Play className="w-3.5 h-3.5 fill-current" />
+                              <span>Probar Audio</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      <p className="text-xs text-[#64748B]">
+                        Se reproduce automáticamente al ingresar por primera vez. Si el navegador bloquea el autoplay, muestra el toast sutil para reproducir al toque.
+                      </p>
+                      <div className="text-[11px] font-mono text-[#94A3B8] truncate bg-[#F8FAFC] p-2 rounded-lg border border-[#E2E8F0]">
+                        {BIANKA_AUDIO_ASSETS.WELCOME}
+                      </div>
+                    </div>
+
+                    {/* 2. Audio Hito Día 10 */}
+                    <div className="bg-white p-5 rounded-2xl border border-[#E2E8F0] shadow-2xs space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center font-bold text-lg border border-teal-200">
+                            🌿
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-teal-700 bg-teal-50 px-2 py-0.5 rounded">
+                              Fase de Restauración
+                            </span>
+                            <h4 className="text-sm font-bold text-[#0F172A] mt-0.5">
+                              Hito Día 10 (Restauración)
+                            </h4>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (playingAudioKey === 'day10') {
+                              stopActiveBiankaAudio();
+                              setPlayingAudioKey(null);
+                            } else {
+                              stopActiveBiankaAudio();
+                              setPlayingAudioKey('day10');
+                              playBiankaAudio(BIANKA_AUDIO_ASSETS.DAY_10, {
+                                onEnded: () => setPlayingAudioKey(null),
+                                onError: () => setPlayingAudioKey(null)
+                              });
+                            }
+                          }}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all ${
+                            playingAudioKey === 'day10'
+                              ? 'bg-red-500 text-white'
+                              : 'bg-[#0F766E] hover:bg-[#115E59] text-white'
+                          }`}
+                        >
+                          {playingAudioKey === 'day10' ? (
+                            <>
+                              <Pause className="w-3.5 h-3.5" />
+                              <span>Pausar</span>
+                            </>
+                          ) : (
+                            <>
+                              <Play className="w-3.5 h-3.5 fill-current" />
+                              <span>Probar Audio</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      <p className="text-xs text-[#64748B]">
+                        Disparado al confirmar el registro del Día 10 con modal interactivo y confeti.
+                      </p>
+                      <div className="text-[11px] font-mono text-[#94A3B8] truncate bg-[#F8FAFC] p-2 rounded-lg border border-[#E2E8F0]">
+                        {BIANKA_AUDIO_ASSETS.DAY_10}
+                      </div>
+                    </div>
+
+                    {/* 3. Audio Hito Día 15 */}
+                    <div className="bg-white p-5 rounded-2xl border border-[#E2E8F0] shadow-2xs space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold text-lg border border-amber-200">
+                            🎉
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-2 py-0.5 rounded">
+                              Mitad del Protocolo
+                            </span>
+                            <h4 className="text-sm font-bold text-[#0F172A] mt-0.5">
+                              Hito Día 15 (Mitad de Reto)
+                            </h4>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (playingAudioKey === 'day15') {
+                              stopActiveBiankaAudio();
+                              setPlayingAudioKey(null);
+                            } else {
+                              stopActiveBiankaAudio();
+                              setPlayingAudioKey('day15');
+                              playBiankaAudio(BIANKA_AUDIO_ASSETS.DAY_15, {
+                                onEnded: () => setPlayingAudioKey(null),
+                                onError: () => setPlayingAudioKey(null)
+                              });
+                            }
+                          }}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all ${
+                            playingAudioKey === 'day15'
+                              ? 'bg-red-500 text-white'
+                              : 'bg-[#F59E0B] hover:bg-[#D97706] text-white'
+                          }`}
+                        >
+                          {playingAudioKey === 'day15' ? (
+                            <>
+                              <Pause className="w-3.5 h-3.5" />
+                              <span>Pausar</span>
+                            </>
+                          ) : (
+                            <>
+                              <Play className="w-3.5 h-3.5 fill-current" />
+                              <span>Probar Audio</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      <p className="text-xs text-[#64748B]">
+                        Incluye modal con botón para reordenar por WhatsApp el siguiente frasco con descuento VIP.
+                      </p>
+                      <div className="text-[11px] font-mono text-[#94A3B8] truncate bg-[#F8FAFC] p-2 rounded-lg border border-[#E2E8F0]">
+                        {BIANKA_AUDIO_ASSETS.DAY_15}
+                      </div>
+                    </div>
+
+                    {/* 4. Audio Hito Día 30 & PDF */}
+                    <div className="bg-white p-5 rounded-2xl border border-[#E2E8F0] shadow-2xs space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-lg border border-emerald-200">
+                            🏆
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-amber-100 px-2 py-0.5 rounded">
+                              Victoria Digestiva
+                            </span>
+                            <h4 className="text-sm font-bold text-[#0F172A] mt-0.5">
+                              Hito Día 30 (Final del Reto)
+                            </h4>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (playingAudioKey === 'day30') {
+                              stopActiveBiankaAudio();
+                              setPlayingAudioKey(null);
+                            } else {
+                              stopActiveBiankaAudio();
+                              setPlayingAudioKey('day30');
+                              playBiankaAudio(BIANKA_AUDIO_ASSETS.DAY_30, {
+                                onEnded: () => setPlayingAudioKey(null),
+                                onError: () => setPlayingAudioKey(null)
+                              });
+                            }
+                          }}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all ${
+                            playingAudioKey === 'day30'
+                              ? 'bg-red-500 text-white'
+                              : 'bg-[#D97706] hover:bg-[#B45309] text-white'
+                          }`}
+                        >
+                          {playingAudioKey === 'day30' ? (
+                            <>
+                              <Pause className="w-3.5 h-3.5" />
+                              <span>Pausar</span>
+                            </>
+                          ) : (
+                            <>
+                              <Play className="w-3.5 h-3.5 fill-current" />
+                              <span>Probar Audio</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      <p className="text-xs text-[#64748B]">
+                        Palabras finales de Bianka celebrando los 30 días conquistados junto con la descarga directa del Plan Nutricional.
+                      </p>
+                      <div className="text-[11px] font-mono text-[#94A3B8] truncate bg-[#F8FAFC] p-2 rounded-lg border border-[#E2E8F0]">
+                        {BIANKA_AUDIO_ASSETS.DAY_30}
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Documento PDF Descargable */}
+                  <div className="p-5 rounded-2xl bg-white border border-[#CBD5E1] shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-3 bg-emerald-50 text-[#0F766E] rounded-xl border border-emerald-200">
+                        <Download className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-[#0F172A]">
+                          Plan Nutricional con Coli Plus (PDF Oficial)
+                        </h4>
+                        <p className="text-xs text-[#64748B] mt-0.5">
+                          Enlace de descarga directa entregado a las clientas en el Hito del Día 30.
+                        </p>
+                      </div>
+                    </div>
+
+                    <a
+                      href={BIANKA_AUDIO_ASSETS.PDF_PLAN}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download="Plan_Nutricional_con_Coliplus.pdf"
+                      className="px-4 py-2.5 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white text-xs font-bold transition-colors shadow-xs flex items-center space-x-2 shrink-0"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Descargar PDF</span>
+                    </a>
+                  </div>
+
+                </div>
+              )}
+
               {adminTab === 'codes' && (
                 <div className="space-y-4">
                   {/* Overview Card */}
