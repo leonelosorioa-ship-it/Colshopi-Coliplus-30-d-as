@@ -62,15 +62,23 @@ export const DayDetailModal: React.FC<DayDetailModalProps> = ({
     }
     setCompletedTaskIds(updated);
 
-    // If all tasks completed, offer to complete day
+    // If all tasks completed, celebrate and return to main section
     if (updated.length === dayPlan.tasks.length && !isDayCompleted) {
       onCompleteDay(dayPlan.day, true);
+      onClose();
     }
   };
 
   const handleCompleteButtonClick = () => {
     if (isActionBlocked && !isDayCompleted) return;
-    onCompleteDay(dayPlan.day, !isDayCompleted);
+    if (isDayCompleted) {
+      // Already completed: return to main section
+      onClose();
+      return;
+    }
+    // Register completion, celebrate, and return to main section
+    onCompleteDay(dayPlan.day, true);
+    onClose();
   };
 
   return (
@@ -279,7 +287,7 @@ export const DayDetailModal: React.FC<DayDetailModalProps> = ({
             {isDayCompleted ? (
               <>
                 <Check className="w-4 h-4" />
-                <span>Día Marcado como Completado ✓</span>
+                <span>Día Registrado • Volver al Inicio 🌿</span>
               </>
             ) : isDayWaiting24h ? (
               <>
@@ -294,7 +302,7 @@ export const DayDetailModal: React.FC<DayDetailModalProps> = ({
             ) : (
               <>
                 <Check className="w-4 h-4" />
-                <span>Marcar Día como Completado</span>
+                <span>Confirmar y Completar Día {dayPlan.day} ✨</span>
               </>
             )}
           </button>

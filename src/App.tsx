@@ -11,7 +11,9 @@ import {
   ShoppingBag,
   ShieldAlert,
   CheckCircle2,
-  Download
+  Download,
+  X,
+  Award
 } from 'lucide-react';
 import { UserProfile, DayPlan, CheckInRecord } from './types';
 import { COLIPLUS_30_DAYS } from './data/coliplusDaysData';
@@ -25,6 +27,7 @@ import { RecipeBook } from './components/RecipeBook';
 import { MarieChat } from './components/MarieChat';
 import { OrderModal } from './components/OrderModal';
 import { MilestoneModal } from './components/MilestoneModal';
+import { DaySuccessModal } from './components/DaySuccessModal';
 import { WelcomeAudioBanner } from './components/WelcomeAudioBanner';
 import { PWAInstallModal } from './components/PWAInstallModal';
 import { pwaManager } from './utils/pwaManager';
@@ -66,6 +69,18 @@ export default function App() {
     isOpen: false,
     day: 15
   });
+  const [daySuccessModal, setDaySuccessModal] = useState<{
+    isOpen: boolean;
+    dayNumber: number;
+    goalTitle?: string;
+    isCheckInOnly?: boolean;
+  }>({
+    isOpen: false,
+    dayNumber: 0,
+    goalTitle: '',
+    isCheckInOnly: false
+  });
+  const [celebratedDay, setCelebratedDay] = useState<number | null>(null);
 
   // Push notifications & PWA modal state
   const [isPushActive, setIsPushActive] = useState(false);
@@ -212,12 +227,27 @@ export default function App() {
       console.warn('Backend sync fallback');
     }
 
-    // Check for celebration milestone (Day 10, Day 15 or Day 30)
-    if (dayNumber === 10 || dayNumber === 15 || dayNumber === 30) {
-      setMilestoneModal({
-        isOpen: true,
-        day: dayNumber
-      });
+    // Check for celebration (Milestones for Days 10, 15, 30; DaySuccessModal for all other days)
+    if (allTasksDone) {
+      // Automatically return to main protocol section
+      setSelectedDayPlan(null);
+      setActiveTab('calendar');
+      setCelebratedDay(dayNumber);
+
+      if (dayNumber === 10 || dayNumber === 15 || dayNumber === 30) {
+        setMilestoneModal({
+          isOpen: true,
+          day: dayNumber
+        });
+      } else {
+        const plan = COLIPLUS_30_DAYS.find(d => d.day === dayNumber);
+        setDaySuccessModal({
+          isOpen: true,
+          dayNumber: dayNumber,
+          goalTitle: plan?.dailyGoal,
+          isCheckInOnly: false
+        });
+      }
     }
   };
 
@@ -264,11 +294,24 @@ export default function App() {
 
     setUser(updatedUser);
 
-    // Trigger celebration milestone modal on check-in if Day 10, 15, or 30
+    // Automatically return to main protocol section
+    setSelectedDayPlan(null);
+    setActiveTab('calendar');
+    setCelebratedDay(dayNumber);
+
+    // Trigger celebration modal (Milestone on Day 10, 15, or 30; DaySuccessModal on all other days)
     if (dayNumber === 10 || dayNumber === 15 || dayNumber === 30) {
       setMilestoneModal({
         isOpen: true,
         day: dayNumber
+      });
+    } else {
+      const plan = COLIPLUS_30_DAYS.find(d => d.day === dayNumber);
+      setDaySuccessModal({
+        isOpen: true,
+        dayNumber: dayNumber,
+        goalTitle: plan?.dailyGoal,
+        isCheckInOnly: true
       });
     }
 
@@ -367,6 +410,38 @@ export default function App() {
                 </button>
               </div>
             </div>
+
+            {/* Top Celebratory Banner when a day was just registered */}
+            {celebratedDay && (
+              <motion.div
+                initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="p-4 rounded-2xl bg-linear-to-r from-[#ECFDF5] via-[#F0FDF4] to-[#FAF6F0] border-2 border-[#10B981] shadow-xs flex items-center justify-between gap-3 text-xs"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-2xl bg-[#10B981] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs">
+                    D{celebratedDay}
+                  </div>
+                  <div>
+                    <p className="font-bold text-[#065F46] text-xs sm:text-sm flex items-center gap-1.5">
+                      <span>¡Día {celebratedDay} Registrado y Guardado con Éxito!</span>
+                      <span>🎉</span>
+                    </p>
+                    <p className="text-[#334155] text-[11px] sm:text-xs mt-0.5">
+                      Tus datos quedaron guardados en tu bitácora de Coli Plus. Tu próximo día se habilitará al cumplirse el ciclo de 24 horas.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setCelebratedDay(null)}
+                  className="p-1.5 rounded-lg text-[#64748B] hover:text-[#0F172A] hover:bg-[#E2E8F0] transition-colors cursor-pointer"
+                  title="Cerrar aviso"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </motion.div>
+            )}
 
             {/* TAB 1: CALENDAR & 30-DAY PROTOCOL */}
             {activeTab === 'calendar' && (
@@ -509,8 +584,31 @@ export default function App() {
         userName={user?.name || 'Compañera'}
         user={user}
         isOpen={milestoneModal.isOpen}
-        onClose={() => setMilestoneModal({ isOpen: false, day: 15 })}
+        onClose={() => {
+          setMilestoneModal({ isOpen: false, day: 15 });
+          setActiveTab('calendar');
+        }}
         onOpenStore={() => setIsOrderModalOpen(true)}
+      />
+
+      {/* 3.1 Standard Day Registration & Completion Celebration Modal (All 30 Days) */}
+      <DaySuccessModal
+        isOpen={daySuccessModal.isOpen}
+        dayNumber={daySuccessModal.dayNumber}
+        userName={user?.name || 'Compañera'}
+        user={user}
+        goalTitle={daySuccessModal.goalTitle}
+        isCheckInOnly={daySuccessModal.isCheckInOnly}
+        onCloseAndGoHome={() => {
+          setDaySuccessModal({ isOpen: false, dayNumber: 0, goalTitle: '', isCheckInOnly: false });
+          setActiveTab('calendar');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        onGoToMetrics={() => {
+          setDaySuccessModal({ isOpen: false, dayNumber: 0, goalTitle: '', isCheckInOnly: false });
+          setActiveTab('charts');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
       />
 
       {/* 4. PWA Direct Installation Modal */}
