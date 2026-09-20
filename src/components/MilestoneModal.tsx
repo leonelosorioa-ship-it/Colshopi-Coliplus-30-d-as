@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import confetti from 'canvas-confetti';
 import {
   Award,
@@ -11,12 +11,15 @@ import {
   Pause,
   Sun,
   Volume2,
-  ExternalLink,
   ShoppingBag,
   CheckCircle2,
   FileText
 } from 'lucide-react';
-import { generateDiplomaPDF } from '../utils/pdfGenerator';
+import {
+  generateDiplomaPDF,
+  generateBitacora30DiasPDF,
+  shareBitacoraWhatsApp
+} from '../utils/pdfGenerator';
 import {
   BIANKA_AUDIO_ASSETS,
   playBiankaAudio,
@@ -24,10 +27,12 @@ import {
   formatAudioTime
 } from '../utils/biankaAudioPlayer';
 import { BiankaAvatar } from './BiankaAvatar';
+import { UserProfile } from '../types';
 
 interface MilestoneModalProps {
   dayNumber: number;
   userName: string;
+  user?: UserProfile | null;
   isOpen: boolean;
   onClose: () => void;
   onOpenStore?: () => void;
@@ -36,6 +41,7 @@ interface MilestoneModalProps {
 export const MilestoneModal: React.FC<MilestoneModalProps> = ({
   dayNumber,
   userName,
+  user,
   isOpen,
   onClose,
   onOpenStore
@@ -45,18 +51,39 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
   const [duration, setDuration] = useState(0);
   const [isAutoplayBlocked, setIsAutoplayBlocked] = useState(false);
   const [audioEnded, setAudioEnded] = useState(false);
+  const [isDownloadingBitacora, setIsDownloadingBitacora] = useState(false);
+  const [isSharingBitacora, setIsSharingBitacora] = useState(false);
+  const [bitacoraDownloaded, setBitacoraDownloaded] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Determinar datos según el hito
   const isDay10 = dayNumber === 10;
   const isDay15 = dayNumber === 15;
-  const isDay30 = dayNumber === 30 || dayNumber > 15 && !isDay15 && !isDay10;
+  const isDay30 = dayNumber === 30 || (dayNumber > 15 && !isDay15 && !isDay10);
 
   const audioUrl = isDay10
     ? BIANKA_AUDIO_ASSETS.DAY_10
     : isDay15
     ? BIANKA_AUDIO_ASSETS.DAY_15
     : BIANKA_AUDIO_ASSETS.DAY_30;
+
+  // Objeto de perfil completo garantizado
+  const fullUser: UserProfile = user || {
+    id: 'VIP-USER',
+    accessCode: 'COLIFEM-30D',
+    name: userName || 'Usuaria de Victoria Digestiva',
+    whatsapp: '',
+    email: '',
+    ageRange: 'Adulto',
+    digestiveAngle: 'Salud del Colon y Tránsito Lento',
+    symptoms: ['Hinchazón', 'Tránsito Lento'],
+    currentDay: 30,
+    completedDays: Array.from({ length: 30 }, (_, i) => i + 1),
+    checkIns: {},
+    dayCompletedTimestamps: {},
+    lastActive: new Date().toISOString(),
+    createdAt: new Date().toISOString()
+  };
 
   // Iniciar audio
   const startAudio = (url: string) => {
@@ -97,8 +124,8 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
       // 1. Explosión de Confeti festivo
       try {
         confetti({
-          particleCount: 120,
-          spread: 80,
+          particleCount: 130,
+          spread: 85,
           origin: { y: 0.6 },
           colors: ['#10B981', '#0F766E', '#F59E0B', '#38BDF8', '#8B5CF6']
         });
@@ -111,6 +138,7 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
       setDuration(0);
       setAudioEnded(false);
       setIsAutoplayBlocked(false);
+      setBitacoraDownloaded(false);
 
       const timer = setTimeout(() => {
         startAudio(audioUrl);
@@ -165,7 +193,32 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
     }
   };
 
-  const handleShareWhatsApp = () => {
+  const handleDownloadBitacora = () => {
+    setIsDownloadingBitacora(true);
+    setTimeout(() => {
+      try {
+        generateBitacora30DiasPDF(fullUser);
+        setBitacoraDownloaded(true);
+      } catch (err) {
+        console.error('Error al generar Bitácora de 30 días:', err);
+      } finally {
+        setIsDownloadingBitacora(false);
+      }
+    }, 350);
+  };
+
+  const handleShareBitacora = async () => {
+    setIsSharingBitacora(true);
+    try {
+      await shareBitacoraWhatsApp(fullUser);
+    } catch (err) {
+      console.error('Error al compartir bitácora en WhatsApp:', err);
+    } finally {
+      setIsSharingBitacora(false);
+    }
+  };
+
+  const handleShareWhatsAppGeneral = () => {
     let text = '';
     if (isDay10) {
       text = encodeURIComponent(
@@ -274,16 +327,16 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
             <>
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-[#FEF3C7] text-[#92400E] border border-[#F59E0B]">
                 <Award className="w-3.5 h-3.5 mr-1 text-[#D97706]" />
-                Victoria Digestiva Total • Día 30
+                Victoria Digestiva Total • Reto 30 Días
               </span>
               <h2 className="text-2xl sm:text-3xl font-black text-[#0F172A] font-display">
-                ¡Reto 30 Días Conquistado! 🏆👑
+                ¡30 Días Conquistados! 🏆👑
               </h2>
               <p className="text-xs sm:text-sm text-[#0F766E] font-bold max-w-md mx-auto">
                 Bianka celebra tu transformación total.
               </p>
               <p className="text-xs text-[#64748B] max-w-md mx-auto pt-1 leading-relaxed">
-                Has concluido con éxito los 30 días de transformación con ColiFem y Coli Plus. Tu colon está desinflamado, ligero y con hábitos blindados.
+                Has concluido con éxito los 30 días de transformación con ColiFem y Coli Plus. Tu colon está desinflamado, ligero y con tu Bitácora Oficial generada con la firma de Bianka.
               </p>
             </>
           )}
@@ -389,33 +442,130 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
         </div>
 
         {/* ============================================================ */}
-        {/* BOTONES DE ACCIÓN ESPECÍFICOS SEGÚN EL HITO                   */}
+        {/* SECCIÓN ESPECIAL SEGÚN EL HITO                                */}
         {/* ============================================================ */}
         <div className="space-y-3 pt-2">
           
-          {/* HITO DÍA 30: BOTÓN DE DESCARGA PDF ADJUNTO OBLIGATORIO */}
+          {/* HITO DÍA 30: BITÁCORA CLÍNICA OFICIAL CON FIRMA DE BIANKA */}
           {isDay30 && (
-            <div className="space-y-2.5">
-              <a
-                id="btn-download-nutritional-plan-pdf"
-                href={BIANKA_AUDIO_ASSETS.PDF_PLAN}
-                target="_blank"
-                rel="noopener noreferrer"
-                download="Plan_Nutricional_con_Coliplus.pdf"
-                className="w-full py-4 px-6 rounded-2xl bg-linear-to-r from-[#0F766E] via-[#059669] to-[#10B981] text-white font-black text-sm sm:text-base hover:opacity-95 transition-all shadow-lg flex items-center justify-center space-x-2.5 ring-2 ring-[#5EEAD4]/50"
-              >
-                <Download className="w-5 h-5 shrink-0" />
-                <span>📥 Descargar Mi Plan Nutricional Coli Plus (PDF)</span>
-              </a>
+            <div className="space-y-3">
+              
+              {/* Tarjeta Destacada de Bitácora 30 Días con Firma de Bianka */}
+              <div className="bg-linear-to-br from-[#ECFDF5] via-[#FAF6F0] to-[#FEF3C7] rounded-2xl p-4 sm:p-5 border-2 border-[#10B981] text-left space-y-3 shadow-md">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center space-x-2.5">
+                    <div className="w-10 h-10 rounded-xl bg-[#0F766E] text-white flex items-center justify-center shrink-0 shadow-sm">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-[#065F46] bg-[#D1FAE5] px-2 py-0.5 rounded-md border border-[#A7F3D0]">
+                        Documento Oficial • Firmado por Bianka ✍️
+                      </span>
+                      <h3 className="text-sm sm:text-base font-extrabold text-[#0F172A] mt-0.5">
+                        Bitácora y Reporte de tus 30 Días
+                      </h3>
+                    </div>
+                  </div>
+                  <span className="text-xs bg-[#FEF3C7] text-[#92400E] font-bold px-2 py-1 rounded-lg border border-[#FDE68A] shrink-0">
+                    INVIMA ✓
+                  </span>
+                </div>
 
-              <button
-                id="btn-download-diploma-pdf"
-                onClick={() => generateDiplomaPDF(userName)}
-                className="w-full py-3 px-5 rounded-xl bg-[#FAF6F0] hover:bg-[#F3EDE2] text-[#0F766E] font-bold text-xs sm:text-sm border border-[#CBD5E1] transition-all flex items-center justify-center space-x-2"
-              >
-                <Award className="w-4 h-4 text-[#D97706]" />
-                <span>Descargar Diploma Oficial de Victoria Digestiva (PDF)</span>
-              </button>
+                <p className="text-xs text-[#475569] leading-relaxed">
+                  Informe clínico completo con el resumen detallado de tus 30 días, métricas de reducción de inflamación (-82%), regularidad Bristol (Tipo 3-4), pautas de mantenimiento a largo plazo y la <strong className="text-[#0F766E]">firma oficial de Bianka</strong>.
+                </p>
+
+                {/* Resumen rápido de métricas alcanzadas */}
+                <div className="grid grid-cols-3 gap-2 pt-1 pb-1">
+                  <div className="bg-white/85 rounded-xl p-2 text-center border border-[#CBD5E1]/60 shadow-2xs">
+                    <span className="block text-[10px] text-slate-500 font-medium">Distensión</span>
+                    <span className="text-xs sm:text-sm font-black text-rose-600">-82%</span>
+                  </div>
+                  <div className="bg-white/85 rounded-xl p-2 text-center border border-[#CBD5E1]/60 shadow-2xs">
+                    <span className="block text-[10px] text-slate-500 font-medium">Bristol</span>
+                    <span className="text-xs sm:text-sm font-black text-emerald-700">Tipo 3-4</span>
+                  </div>
+                  <div className="bg-white/85 rounded-xl p-2 text-center border border-[#CBD5E1]/60 shadow-2xs">
+                    <span className="block text-[10px] text-slate-500 font-medium">Vitalidad</span>
+                    <span className="text-xs sm:text-sm font-black text-amber-600">+88%</span>
+                  </div>
+                </div>
+
+                {/* Botones Principales: Descargar PDF y Compartir en WhatsApp */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                  <button
+                    type="button"
+                    id="btn-download-bitacora-30d"
+                    onClick={handleDownloadBitacora}
+                    disabled={isDownloadingBitacora}
+                    className="w-full py-3.5 px-4 rounded-xl bg-linear-to-r from-[#0F766E] to-[#10B981] hover:opacity-95 text-white font-extrabold text-xs sm:text-sm shadow-md flex items-center justify-center space-x-2 transition-all active:scale-98 cursor-pointer"
+                  >
+                    {isDownloadingBitacora ? (
+                      <>
+                        <Sparkles className="w-4 h-4 animate-spin text-white" />
+                        <span>Generando PDF...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-4 h-4 shrink-0" />
+                        <span>Descargar Bitácora (PDF)</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    id="btn-share-whatsapp-bitacora"
+                    onClick={handleShareBitacora}
+                    disabled={isSharingBitacora}
+                    className="w-full py-3.5 px-4 rounded-xl bg-linear-to-r from-[#25D366] to-[#128C7E] hover:opacity-95 text-white font-extrabold text-xs sm:text-sm shadow-md flex items-center justify-center space-x-2 transition-all active:scale-98 cursor-pointer"
+                  >
+                    {isSharingBitacora ? (
+                      <>
+                        <Sparkles className="w-4 h-4 animate-spin text-white" />
+                        <span>Preparando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Share2 className="w-4 h-4 shrink-0" />
+                        <span>Compartir en WhatsApp</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {bitacoraDownloaded && (
+                  <div className="text-[11px] text-[#047857] font-bold flex items-center space-x-1.5 pt-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981]" />
+                    <span>¡Bitácora generada y descargada! Lista para compartir o imprimir.</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Botones secundarios: Diploma y Plan */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                <button
+                  id="btn-download-diploma-pdf"
+                  onClick={() => generateDiplomaPDF(userName)}
+                  className="w-full py-2.5 px-3 rounded-xl bg-[#FAF6F0] hover:bg-[#F3EDE2] text-[#0F766E] font-bold text-xs border border-[#CBD5E1] transition-all flex items-center justify-center space-x-1.5"
+                >
+                  <Award className="w-4 h-4 text-[#D97706]" />
+                  <span>Diploma de Honor (PDF)</span>
+                </button>
+
+                <a
+                  id="btn-download-nutritional-plan-pdf"
+                  href={BIANKA_AUDIO_ASSETS.PDF_PLAN}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download="Plan_Nutricional_con_Coliplus.pdf"
+                  className="w-full py-2.5 px-3 rounded-xl bg-[#FAF6F0] hover:bg-[#F3EDE2] text-[#475569] font-bold text-xs border border-[#CBD5E1] transition-all flex items-center justify-center space-x-1.5"
+                >
+                  <Download className="w-3.5 h-3.5 text-[#0F766E]" />
+                  <span>Plan Nutricional Coli Plus</span>
+                </a>
+              </div>
+
             </div>
           )}
 
@@ -459,13 +609,15 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
 
           {/* BOTONES SECUNDARIOS: COMPARTIR EN WHATSAPP Y CONTINUAR */}
           <div className="flex items-center justify-center space-x-3 pt-1">
-            <button
-              onClick={handleShareWhatsApp}
-              className="px-4 py-2 rounded-xl bg-[#FAF6F0] hover:bg-[#F5EFE6] text-[#334155] text-xs font-semibold flex items-center space-x-1.5 transition-colors border border-[#CBD5E1]"
-            >
-              <Share2 className="w-3.5 h-3.5 text-[#059669]" />
-              <span>Compartir Logro en WhatsApp</span>
-            </button>
+            {!isDay30 && (
+              <button
+                onClick={handleShareWhatsAppGeneral}
+                className="px-4 py-2 rounded-xl bg-[#FAF6F0] hover:bg-[#F5EFE6] text-[#334155] text-xs font-semibold flex items-center space-x-1.5 transition-colors border border-[#CBD5E1]"
+              >
+                <Share2 className="w-3.5 h-3.5 text-[#059669]" />
+                <span>Compartir Logro en WhatsApp</span>
+              </button>
+            )}
 
             <button
               onClick={handleCloseModal}

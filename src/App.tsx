@@ -506,6 +506,7 @@ export default function App() {
       <MilestoneModal
         dayNumber={milestoneModal.day}
         userName={user?.name || 'Compañera'}
+        user={user}
         isOpen={milestoneModal.isOpen}
         onClose={() => setMilestoneModal({ isOpen: false, day: 15 })}
         onOpenStore={() => setIsOrderModalOpen(true)}

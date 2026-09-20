@@ -11,9 +11,9 @@ import {
   CartesianGrid,
   Legend
 } from 'recharts';
-import { Download, TrendingUp, Sparkles, Activity, FileText, CheckCircle2 } from 'lucide-react';
+import { Download, TrendingUp, Sparkles, Activity, FileText, CheckCircle2, Share2 } from 'lucide-react';
 import { UserProfile } from '../types';
-import { generateReportPDF } from '../utils/pdfGenerator';
+import { generateReportPDF, shareBitacoraWhatsApp } from '../utils/pdfGenerator';
 
 interface ExecutiveEnergyChartPanelProps {
   user: UserProfile;
@@ -26,6 +26,7 @@ export const ExecutiveEnergyChartPanel: React.FC<ExecutiveEnergyChartPanelProps>
 }) => {
   const [timeRange, setTimeRange] = useState<'7d' | '14d' | '30d'>('30d');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isSharingPdf, setIsSharingPdf] = useState(false);
 
   // Generate chart data series from user.checkIns or interpolated model curve
   const maxDay = timeRange === '7d' ? 7 : timeRange === '14d' ? 14 : 30;
@@ -101,10 +102,30 @@ export const ExecutiveEnergyChartPanel: React.FC<ExecutiveEnergyChartPanelProps>
             id="btn-download-wellness-report"
             onClick={handleDownloadPdf}
             disabled={isGeneratingPdf}
-            className="inline-flex items-center px-4 py-2.5 rounded-xl bg-[#0F766E] text-white font-bold text-xs hover:bg-[#115E59] transition-all shadow-xs"
+            className="inline-flex items-center px-4 py-2.5 rounded-xl bg-[#0F766E] text-white font-bold text-xs hover:bg-[#115E59] transition-all shadow-xs cursor-pointer"
+            title="Descargar Bitácora Oficial firmada por Bianka"
           >
             <Download className="w-4 h-4 mr-1.5" />
-            <span>{isGeneratingPdf ? 'Generando PDF...' : 'Descargar Informe PDF'}</span>
+            <span>{isGeneratingPdf ? 'Generando PDF...' : 'Descargar Bitácora PDF'}</span>
+          </button>
+
+          {/* Share WhatsApp button */}
+          <button
+            id="btn-share-wellness-report"
+            onClick={async () => {
+              setIsSharingPdf(true);
+              try {
+                await shareBitacoraWhatsApp(user);
+              } finally {
+                setIsSharingPdf(false);
+              }
+            }}
+            disabled={isSharingPdf}
+            className="inline-flex items-center px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#128C7E] text-white font-bold text-xs transition-all shadow-xs cursor-pointer"
+            title="Compartir Bitácora firmada por Bianka en WhatsApp"
+          >
+            <Share2 className="w-4 h-4 mr-1.5" />
+            <span>{isSharingPdf ? 'Preparando...' : 'Compartir en WhatsApp'}</span>
           </button>
         </div>
       </div>

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Save, CheckCircle2, Droplets, Flame, BatteryCharging, AlertCircle, Info, Sparkles, Clock, Lock, Zap } from 'lucide-react';
+import { Save, CheckCircle2, Droplets, Flame, BatteryCharging, AlertCircle, Info, Sparkles, Clock, Lock, Zap, FileText, Download, Share2, Award } from 'lucide-react';
 import { CheckInRecord, UserProfile } from '../types';
 import { BRISTOL_SCALE } from '../data/bristolData';
 import { getChronologicalStatus } from '../utils/chronologicalCycle';
+import { generateBitacora30DiasPDF, shareBitacoraWhatsApp, generateDiplomaPDF } from '../utils/pdfGenerator';
 
 interface DailyTrackerProps {
   user: UserProfile;
@@ -39,6 +40,8 @@ export const DailyTracker: React.FC<DailyTrackerProps> = ({
   const [bristolType, setBristolType] = useState<number>(existingCheckIn?.bristolType ?? 4);
   const [notes, setNotes] = useState<string>(existingCheckIn?.notes ?? '');
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isDownloadingBitacora, setIsDownloadingBitacora] = useState(false);
+  const [isSharingBitacora, setIsSharingBitacora] = useState(false);
 
   useEffect(() => {
     const c = user.checkIns ? user.checkIns[day] : undefined;
@@ -135,6 +138,68 @@ export const DailyTracker: React.FC<DailyTrackerProps> = ({
           </button>
         </div>
       </div>
+
+      {/* DAY 30 CELEBRATION & BITACORA BANNER */}
+      {day === 30 && (user.completedDays?.includes(30) || user.checkIns?.[30]) && (
+        <div className="p-6 rounded-3xl bg-linear-to-r from-[#ECFDF5] via-[#FAF6F0] to-[#FEF3C7] border-2 border-[#10B981] shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+          <div className="flex items-start space-x-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-[#0F766E] text-white flex items-center justify-center shrink-0 shadow-md">
+              <Award className="w-6 h-6 text-[#FDE68A]" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                <span className="text-[10px] uppercase tracking-wider font-black px-2.5 py-0.5 rounded-full bg-[#10B981] text-white">
+                  ¡Victoria Digestiva 30 Días! 🏆
+                </span>
+                <span className="text-xs font-bold text-[#065F46] bg-[#D1FAE5] px-2 py-0.5 rounded-md border border-[#A7F3D0]">
+                  Bitácora Firmada por Bianka ✍️
+                </span>
+              </div>
+              <h3 className="text-lg font-black text-[#0F172A] mt-1 font-display">
+                Informe y Bitácora Oficial de los 30 Días
+              </h3>
+              <p className="text-xs text-[#475569] mt-1 max-w-xl leading-relaxed">
+                Has culminado tu ciclo de 30 días. Tu bitácora clínica oficial con la firma de Bianka, métricas de desinflamación y pautas de continuidad está lista para descargar y compartir.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full md:w-auto shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                setIsDownloadingBitacora(true);
+                setTimeout(() => {
+                  generateBitacora30DiasPDF(user);
+                  setIsDownloadingBitacora(false);
+                }, 350);
+              }}
+              disabled={isDownloadingBitacora}
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-linear-to-r from-[#0F766E] to-[#10B981] text-white font-bold text-xs hover:opacity-95 shadow-xs flex items-center justify-center space-x-2 cursor-pointer transition-all"
+            >
+              <Download className="w-4 h-4" />
+              <span>{isDownloadingBitacora ? 'Generando...' : 'Descargar Bitácora PDF'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={async () => {
+                setIsSharingBitacora(true);
+                try {
+                  await shareBitacoraWhatsApp(user);
+                } finally {
+                  setIsSharingBitacora(false);
+                }
+              }}
+              disabled={isSharingBitacora}
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#128C7E] text-white font-bold text-xs shadow-xs flex items-center justify-center space-x-2 cursor-pointer transition-all"
+            >
+              <Share2 className="w-4 h-4" />
+              <span>{isSharingBitacora ? 'Preparando...' : 'Compartir en WhatsApp'}</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 24-HOUR COUNTDOWN BANNER IF CURRENT SELECTED DAY IS IN WAITING / ASSIMILATION */}
       {isDayWaiting24h && (
