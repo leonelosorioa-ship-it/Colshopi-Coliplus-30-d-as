@@ -74,6 +74,7 @@ export default function App() {
 
   // PWA & Push initialization
   useEffect(() => {
+    document.title = 'ColiFem 30D - ColShopi';
     pwaManager.registerServiceWorker();
 
     const handleBeforeInstall = (e: any) => {

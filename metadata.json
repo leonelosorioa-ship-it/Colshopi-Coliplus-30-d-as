@@ -1,6 +1,6 @@
 {
-  "name": "ColiFem 30D: Guía de Transformación Digestiva y Cuidado del Colon",
-  "description": "Obsequio interactivo y valor agregado exclusivo de 30 días para clientas que adquirieron el suplemento funcional con registro INVIMA Coli Plus en ColShopi Tienda By Leps Digital. Con la guía de bienestar Bianka, calendario estricto de 4 fases, daily tracker, recetario antiinflamatorio y notificaciones push.",
+  "name": "ColiFem 30D - ColShopi",
+  "description": "Guía interactiva y protocolo exclusivo de 30 días para clientas de Coli Plus en ColShopi Tienda By Leps Digital. Acompañamiento con Bianka, fases clínicas, seguimiento y recetario.",
   "requestFramePermissions": ["notifications"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
