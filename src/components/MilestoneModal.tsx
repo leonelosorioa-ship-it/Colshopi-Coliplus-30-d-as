@@ -246,12 +246,12 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
+    <div className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-slate-900/75 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="bg-white w-full max-w-xl rounded-3xl shadow-2xl border border-[#E2E8F0] overflow-hidden text-center p-5 sm:p-7 space-y-5 relative max-h-[92vh] overflow-y-auto"
+        className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-[#E2E8F0] text-center p-4 sm:p-6 space-y-4 relative max-h-[90vh] overflow-y-auto overscroll-contain my-auto"
       >
         {/* Botón Cerrar */}
         <button

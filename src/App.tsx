@@ -560,6 +560,11 @@ export default function App() {
           user={user}
           onClose={() => setSelectedDayPlan(null)}
           onCompleteDay={handleCompleteDay}
+          onSaveCheckIn={handleSaveCheckIn}
+          onOpenMarieChat={() => {
+            setSelectedDayPlan(null);
+            setActiveTab('chat');
+          }}
           onOpenTracker={(dayNum) => {
             setTrackerDay(dayNum);
             setActiveTab('tracker');

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
-import { CheckCircle2, Sparkles, Clock, ArrowRight, ShieldCheck, Heart, Award, X } from 'lucide-react';
+import { CheckCircle2, Sparkles, Clock, ArrowRight, Heart, X, BarChart3 } from 'lucide-react';
 import { UserProfile } from '../types';
 import { COLIPLUS_30_DAYS } from '../data/coliplusDaysData';
 import { BiankaAvatar } from './BiankaAvatar';
@@ -43,30 +43,29 @@ export const DaySuccessModal: React.FC<DaySuccessModalProps> = ({
     // 2. Launch colorful celebration confetti
     try {
       confetti({
-        particleCount: 90,
-        spread: 70,
+        particleCount: 80,
+        spread: 65,
         origin: { y: 0.55 },
         colors: ['#10B981', '#0F766E', '#F59E0B', '#00E5FF', '#EC4899', '#8B5CF6']
       });
-      // Second light shower
       setTimeout(() => {
         try {
           confetti({
-            particleCount: 45,
+            particleCount: 35,
             angle: 60,
-            spread: 55,
-            origin: { x: 0, y: 0.6 },
+            spread: 50,
+            origin: { x: 0.1, y: 0.6 },
             colors: ['#10B981', '#00E5FF', '#F59E0B']
           });
           confetti({
-            particleCount: 45,
+            particleCount: 35,
             angle: 120,
-            spread: 55,
-            origin: { x: 1, y: 0.6 },
+            spread: 50,
+            origin: { x: 0.9, y: 0.6 },
             colors: ['#10B981', '#00E5FF', '#F59E0B']
           });
         } catch (e) {}
-      }, 350);
+      }, 300);
     } catch (e) {
       console.debug('Confetti error:', e);
     }
@@ -91,112 +90,108 @@ export const DaySuccessModal: React.FC<DaySuccessModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3.5 sm:p-6">
+      <div className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-slate-900/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          initial={{ opacity: 0, scale: 0.92, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border-2 border-[#10B981]/30 overflow-hidden relative"
+          exit={{ opacity: 0, scale: 0.92, y: 15 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 320 }}
+          className="bg-white w-full max-w-sm sm:max-w-md rounded-3xl shadow-2xl border-2 border-[#10B981]/30 overflow-hidden relative max-h-[90vh] sm:max-h-[88vh] flex flex-col my-auto"
         >
-          {/* Top celebratory decorative banner */}
-          <div className="bg-gradient-to-r from-[#0F766E] via-[#10B981] to-[#059669] p-6 text-white text-center relative overflow-hidden">
+          {/* Top celebratory decorative banner - Mobile Optimized */}
+          <div className="bg-gradient-to-r from-[#064E3B] via-[#0F766E] to-[#10B981] p-4 sm:p-5 text-white text-center relative shrink-0">
             {/* Background Glow */}
-            <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none" />
-            <div className="absolute -left-8 -bottom-8 w-32 h-32 bg-[#F59E0B]/20 rounded-full blur-xl pointer-events-none" />
+            <div className="absolute -right-8 -top-8 w-24 h-24 bg-white/10 rounded-full blur-lg pointer-events-none" />
+            <div className="absolute -left-8 -bottom-8 w-24 h-24 bg-[#F59E0B]/20 rounded-full blur-lg pointer-events-none" />
 
             {/* Close button */}
             <button
               onClick={onCloseAndGoHome}
-              className="absolute top-4 right-4 p-1.5 rounded-full bg-black/20 hover:bg-black/30 text-white/90 hover:text-white transition-colors cursor-pointer"
+              className="absolute top-3 right-3 p-1.5 rounded-full bg-black/20 hover:bg-black/30 text-white/90 hover:text-white transition-colors cursor-pointer"
               title="Cerrar y volver al inicio"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
 
             {/* Avatar & Celebration Icon */}
             <div className="flex flex-col items-center justify-center relative">
-              <div className="relative mb-2">
-                <div className="relative p-1 rounded-full bg-white/20 shadow-lg ring-4 ring-white/30">
-                  <BiankaAvatar size="lg" className="border-2 border-white" />
+              <div className="relative mb-1.5">
+                <div className="relative p-0.5 rounded-full bg-white/20 shadow-md ring-2 ring-white/40">
+                  <BiankaAvatar size="md" className="w-11 h-11 border-2 border-white" />
                 </div>
-                <div className="absolute -bottom-1 -right-1 bg-[#F59E0B] text-white p-1.5 rounded-full shadow-md animate-bounce">
-                  <Sparkles className="w-4 h-4" />
+                <div className="absolute -bottom-1 -right-1 bg-[#F59E0B] text-white p-1 rounded-full shadow-md animate-bounce">
+                  <Sparkles className="w-3 h-3" />
                 </div>
               </div>
 
-              <div className="inline-flex items-center space-x-1.5 px-3 py-0.5 rounded-full bg-white/20 text-white text-xs font-bold uppercase tracking-wider mb-1">
+              <div className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5">
                 <span>✨ ¡Registro Guardado con Éxito! ✨</span>
               </div>
 
-              <h2 className="text-2xl sm:text-3xl font-extrabold font-display tracking-tight text-white drop-shadow-xs">
+              <h2 className="text-xl sm:text-2xl font-black font-display tracking-tight text-white drop-shadow-xs">
                 ¡Día {dayNumber} Completado!
               </h2>
-              <p className="text-emerald-100 text-xs sm:text-sm font-medium mt-1">
+              <p className="text-emerald-100 text-[11px] sm:text-xs font-medium mt-0.5 truncate max-w-[280px]">
                 {dayPlan?.phaseTitle || 'Transformación Digestiva Coli Plus'}
               </p>
             </div>
           </div>
 
-          {/* Modal Body */}
-          <div className="p-6 sm:p-7 space-y-5 bg-[#FAF6F0]">
+          {/* Modal Body - Scrollable and Mobile Compact */}
+          <div className="p-4 sm:p-5 space-y-3 bg-[#FAF6F0] overflow-y-auto overscroll-contain flex-1">
             {/* Congratulatory Message from Bianka */}
-            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#E2E8F0] shadow-xs space-y-2.5">
-              <div className="flex items-center space-x-2 text-[#0F766E] font-bold text-xs uppercase tracking-wide">
-                <Heart className="w-4 h-4 text-[#E11D48] fill-[#E11D48]" />
+            <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#E2E8F0] shadow-2xs space-y-1.5">
+              <div className="flex items-center space-x-1.5 text-[#0F766E] font-bold text-xs uppercase tracking-wide">
+                <Heart className="w-3.5 h-3.5 text-[#E11D48] fill-[#E11D48]" />
                 <span>Mensaje de Bianka</span>
               </div>
-              <p className="text-[#1E293B] text-sm leading-relaxed">
+              <p className="text-[#1E293B] text-xs sm:text-sm leading-relaxed">
                 ¡Excelente trabajo, <strong className="text-[#0F766E]">{userName}</strong>!{' '}
                 {isCheckInOnly
-                  ? `Registraste tus síntomas y estado digestivo del Día ${dayNumber}. Tu constancia es el secreto para restaurar tu flora intestinal y desinflamar tu colon.`
-                  : `Has cumplido y registrado tus hábitos del Día ${dayNumber} con éxito. Cada paso diario con Coli Plus fortalece tu mucosa digestiva y te acerca a la ligereza total.`}
+                  ? `Registraste tu test de bienestar del Día ${dayNumber}. Tu constancia restaura la flora intestinal y desinflama tu colon.`
+                  : `Tus hábitos y test del Día ${dayNumber} se guardaron con éxito. Cada paso diario con Coli Plus fortalece tu mucosa digestiva.`}
               </p>
               {dayPlan?.biankaQuote && (
-                <div className="text-xs text-[#065F46] bg-[#ECFDF5] p-3 rounded-xl border border-[#A7F3D0] italic">
+                <div className="text-[11px] text-[#065F46] bg-[#ECFDF5] p-2 sm:p-2.5 rounded-xl border border-[#A7F3D0] italic leading-tight">
                   "{dayPlan.biankaQuote}"
                 </div>
               )}
             </div>
 
-            {/* Success Highlights Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="p-3.5 rounded-xl bg-white border border-[#E2E8F0] flex items-start space-x-3 shadow-2xs">
-                <div className="p-2 rounded-lg bg-[#ECFDF5] text-[#10B981] shrink-0">
-                  <CheckCircle2 className="w-5 h-5" />
+            {/* Success Highlights Cards - 2 Column Grid, Mobile-First */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="p-2.5 rounded-xl bg-white border border-[#E2E8F0] flex items-center space-x-2 shadow-2xs">
+                <div className="p-1.5 rounded-lg bg-[#ECFDF5] text-[#10B981] shrink-0">
+                  <CheckCircle2 className="w-4 h-4" />
                 </div>
-                <div>
-                  <h4 className="text-xs font-bold text-[#0F172A]">Información Guardada</h4>
-                  <p className="text-[11px] text-[#64748B] mt-0.5">
-                    Registrado en tu historial y sincronizado con tu progreso.
-                  </p>
+                <div className="min-w-0">
+                  <h4 className="text-[11px] font-bold text-[#0F172A] truncate">Información Guardada</h4>
+                  <p className="text-[10px] text-[#64748B] leading-none mt-0.5 truncate">En tu bitácora</p>
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-white border border-[#E2E8F0] flex items-start space-x-3 shadow-2xs">
-                <div className="p-2 rounded-lg bg-[#FEF3C7] text-[#D97706] shrink-0">
-                  <Clock className="w-5 h-5" />
+              <div className="p-2.5 rounded-xl bg-white border border-[#E2E8F0] flex items-center space-x-2 shadow-2xs">
+                <div className="p-1.5 rounded-lg bg-[#FEF3C7] text-[#D97706] shrink-0">
+                  <Clock className="w-4 h-4" />
                 </div>
-                <div>
-                  <h4 className="text-xs font-bold text-[#0F172A]">Ciclo Biológico (24h)</h4>
-                  <p className="text-[11px] text-[#64748B] mt-0.5">
-                    {dayNumber < 30
-                      ? `El Día ${nextDay} se habilitará en 24h para cuidar tu ritmo.`
-                      : '¡Completaste los 30 días de la guía de colon!'}
+                <div className="min-w-0">
+                  <h4 className="text-[11px] font-bold text-[#0F172A] truncate">Ciclo 24 Horas</h4>
+                  <p className="text-[10px] text-[#64748B] leading-none mt-0.5 truncate">
+                    {dayNumber < 30 ? `Día ${nextDay} en 24h` : 'Reto completado'}
                   </p>
                 </div>
               </div>
             </div>
 
             {/* Countdown and Auto-return notice */}
-            <div className="bg-[#F0FDF4] border border-[#BBF7D0] p-3.5 rounded-2xl flex items-center justify-between text-xs">
-              <div className="flex items-center space-x-2 text-[#065F46]">
-                <Sparkles className="w-4 h-4 text-[#10B981] animate-spin" style={{ animationDuration: '3s' }} />
+            <div className="bg-[#F0FDF4] border border-[#BBF7D0] p-2.5 rounded-xl flex items-center justify-between text-[11px]">
+              <div className="flex items-center space-x-1.5 text-[#065F46] font-medium">
+                <Sparkles className="w-3.5 h-3.5 text-[#10B981] animate-spin" style={{ animationDuration: '3s' }} />
                 <span>
-                  Volviendo automáticamente al inicio en <strong>{countdown}s</strong>
+                  Volviendo al inicio en <strong>{countdown}s</strong>
                 </span>
               </div>
-              <div className="w-16 bg-[#DCFCE7] h-2 rounded-full overflow-hidden">
+              <div className="w-14 bg-[#DCFCE7] h-1.5 rounded-full overflow-hidden">
                 <div
                   className="bg-[#10B981] h-full transition-all duration-1000 ease-linear"
                   style={{ width: `${(countdown / 4) * 100}%` }}
@@ -204,14 +199,14 @@ export const DaySuccessModal: React.FC<DaySuccessModalProps> = ({
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-1">
+            {/* Actions - Guaranteed within Mobile Viewport */}
+            <div className="pt-1 space-y-2">
               <button
                 id="btn-celebration-go-home"
                 onClick={onCloseAndGoHome}
-                className="w-full sm:flex-1 py-3 px-5 rounded-xl bg-gradient-to-r from-[#0F766E] to-[#10B981] text-white font-bold text-xs sm:text-sm hover:opacity-95 transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer active:scale-98"
+                className="w-full py-2.5 sm:py-3 px-4 rounded-xl bg-gradient-to-r from-[#0F766E] to-[#10B981] text-white font-bold text-xs sm:text-sm hover:opacity-95 transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer active:scale-98"
               >
-                <span>Volver a la Sección Principal</span>
+                <span>Volver a la Sección Principal 🌿</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
@@ -219,9 +214,10 @@ export const DaySuccessModal: React.FC<DaySuccessModalProps> = ({
                 <button
                   id="btn-celebration-go-metrics"
                   onClick={onGoToMetrics}
-                  className="w-full sm:w-auto py-3 px-4 rounded-xl bg-white border border-[#CBD5E1] text-[#334155] font-bold text-xs hover:bg-[#F8FAFC] transition-colors whitespace-nowrap cursor-pointer"
+                  className="w-full py-2 px-3 text-center text-[#475569] hover:text-[#0F766E] font-semibold text-xs flex items-center justify-center space-x-1 cursor-pointer"
                 >
-                  Ver Métricas 📊
+                  <BarChart3 className="w-3.5 h-3.5 mr-1" />
+                  <span>Ver Métricas y Gráficas de Progreso</span>
                 </button>
               )}
             </div>

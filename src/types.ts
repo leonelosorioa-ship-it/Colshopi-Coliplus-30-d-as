@@ -20,6 +20,7 @@ export interface CheckInRecord {
   bloatingScore: number; // 1 (vientre plano/sin gas) a 5 (distensión máxima/cólico)
   energyScore: number; // 1 (agotada) a 5 (vitalidad plena)
   digestionType: 'liviana' | 'normal' | 'pesada' | 'inflamada' | 'regular';
+  mood?: 'radiante' | 'tranquila' | 'enfocada' | 'sensible' | 'agotada' | string;
   bristolType: number; // 1-7 Escala de Bristol
   moodScore?: number; // 1 a 5
   sleepQuality?: number; // 1 a 5 (calidad descanso nocturno)
@@ -60,6 +61,7 @@ export interface DayPlan {
   phaseTitle: string;
   phaseSub: string;
   dailyGoal: string;
+  whyItWorks?: string; // Explicación de cómo actúa en el cuerpo y colon
   biankaQuote?: string;
   biankaAudioText?: string;
   marieQuote?: string;

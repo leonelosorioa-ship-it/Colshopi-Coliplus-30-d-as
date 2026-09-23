@@ -23,9 +23,10 @@ export const COLIPLUS_30_DAYS: DayPlan[] = [
   {
     day: 2,
     phaseNumber: 1,
-    phaseTitle: 'Fase 1: Reseteo y Descompresión Intestinal',
-    phaseSub: 'Días 1 al 7 • Alivio rápido de gases, hinchazón y digestión pesada',
-    dailyGoal: 'Despertar con un vaso de agua tibia y observar la primera evacuación.',
+    phaseTitle: 'Fase 1: Limpieza Intestinal & Desinflamación',
+    phaseSub: 'Liviandad Abdominal',
+    dailyGoal: 'Oxigenación Celular con Clorofila',
+    whyItWorks: 'La clorofila actúa como un oxigenador sanguíneo que ayuda a desinflamar los tejidos y apoyar la salud de la piel desde adentro hacia afuera.',
     biankaQuote: 'Tu cuerpo responde maravillosamente cuando le das agua suficiente y fibra botánica noble sin forzarlo.',
     biankaAudioText: '¡Buenos días! Al despertar, bebe un vaso de agua tibia antes de tu café matutino. La pitaya, linaza y chía de Coli Plus que tomaste anoche ya están lubricando suavemente tus paredes intestinales.',
     coliPlusIntakeGuide: '1 cucharada en agua fresca antes de dormir para propulsión fecal natural matutina.',
